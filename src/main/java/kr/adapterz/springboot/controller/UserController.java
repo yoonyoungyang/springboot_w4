@@ -1,14 +1,9 @@
 package kr.adapterz.springboot.controller;
 
 import kr.adapterz.springboot.common.ApiResponse;
-import kr.adapterz.springboot.dto.ErrorResponse;
-import kr.adapterz.springboot.dto.SignUpRequest;
-import kr.adapterz.springboot.dto.SignUpResponse;
+import kr.adapterz.springboot.dto.*;
 import kr.adapterz.springboot.service.UserService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,4 +67,129 @@ public class UserController {
         SignUpResponse data = userService.signup(request);
         return new ApiResponse<>("signup_success", data, null);
     }
+
+    @PostMapping("/login")
+    public ApiResponse<LoginResponse> login(@RequestBody LoginRequest request) {
+
+        List<ErrorResponse> errors = new ArrayList<>();
+
+        if (request.getEmail() == null) {
+            errors.add(new ErrorResponse("email", "EMAIL_NONE", "이메일이 비어있습니다."));
+        }
+        if (request.getPassword() ==null) {
+            errors.add(new ErrorResponse("password", "PASSWORD_NONE", "비밀번호가 비어있습니다."));
+        }
+
+        if (!errors.isEmpty()) {
+            return new ApiResponse<>("login_error", null, errors);
+        }
+        try {
+            LoginResponse data = userService.login(request);
+            return new ApiResponse<>("login_success", data, null);
+        } catch (RuntimeException e) {
+            errors.add(new ErrorResponse("login", "LOGIN_FAILED", "이메일 또는 비밀번호가 일치하지 않습니다."));
+            return new ApiResponse<>("login_failed", null, errors);
+        }
+    }
+
+    @PatchMapping("/me")
+    public ApiResponse<UpdateUserResponse> updateUser(
+            @RequestBody UpdateUserRequest request) {
+
+        List<ErrorResponse> errors = new ArrayList<>();
+
+        if (request.getNickname() != null &&
+                request.getNickname().contains(" ")) {
+
+            errors.add(new ErrorResponse(
+                    "nickname",
+                    "NICKNAME_HAS_SPACE",
+                    "닉네임에 띄어쓰기가 존재합니다."
+            ));
+        }
+
+        if (request.getNickname() != null &&
+                request.getNickname().length() >= 11) {
+
+            errors.add(new ErrorResponse(
+                    "nickname",
+                    "NICKNAME_TOO_LONG",
+                    "닉네임이 11자 이상입니다."
+            ));
+        }
+
+        if (!errors.isEmpty()) {
+            return new ApiResponse<>("user_validation_error", null, errors);
+        }
+
+        try {
+
+            UpdateUserResponse data =
+                    userService.updateUser(request);
+
+            return new ApiResponse<>("user_update_success", data, null);
+
+        } catch (RuntimeException e) {
+
+            errors.add(new ErrorResponse(
+                    "user",
+                    "USER_UPDATE_FAIL",
+                    e.getMessage()
+            ));
+
+            return new ApiResponse<>("user_update_fail", null, errors);
+        }
+    }
+
+    @PatchMapping("/me/password")
+    public ApiResponse<UpdatePasswordResponse> updatePassword(
+            @RequestBody UpdatePasswordRequest request) {
+
+        List<ErrorResponse> errors = new ArrayList<>();
+
+        try {
+
+            UpdatePasswordResponse data =
+                    userService.updatePassword(request);
+
+            return new ApiResponse<>("password_update_success", data, null);
+
+        } catch (RuntimeException e) {
+
+            errors.add(new ErrorResponse(
+                    "password",
+                    "PASSWORD_UPDATE_FAIL",
+                    e.getMessage()
+            ));
+
+            return new ApiResponse<>("password_update_fail", null, errors);
+        }
+    }
+
+    @DeleteMapping("/me")
+    public ApiResponse<DeleteUserResponse> deleteUser(
+            @RequestParam int userId,
+            @RequestParam String password) {
+
+        List<ErrorResponse> errors = new ArrayList<>();
+
+        try {
+
+            DeleteUserResponse data =
+                    userService.deleteUser(userId, password);
+
+            return new ApiResponse<>("user_delete_success", data, null);
+
+        } catch (RuntimeException e) {
+
+            errors.add(new ErrorResponse(
+                    "user",
+                    "USER_DELETE_FAIL",
+                    e.getMessage()
+            ));
+
+            return new ApiResponse<>("user_delete_fail", null, errors);
+        }
+    }
+
 }

@@ -41,4 +41,18 @@ public class User {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+
+    public void updateUser(String nickname, String profileImg) {
+
+        if (nickname != null) {
+            this.nickname = nickname;
+        }
+
+        if (profileImg != null) {
+            this.profileImg = profileImg;
+        }
+    }
+    public void updatePassword(String password) {
+        this.password = password;
+    }
 }

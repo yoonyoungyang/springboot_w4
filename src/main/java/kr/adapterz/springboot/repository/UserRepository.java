@@ -36,8 +36,27 @@ public class UserRepository {
 
     }
 
+    public User findUserByEmail(String email) {
+        for (User user : users.values()) {
+            if (user.getEmail().equals(email)) {
+                return user;
+            }
+        }
+        return null;
+    }
+
     public User save(User user) {
         users.put(user.getUserId(), user);
         return user;
+    }
+
+    public User findUserById(int userId) {
+
+        return users.get(userId);
+
+    }
+
+    public void deleteUser(int userId) {
+        users.remove(userId);
     }
 }
