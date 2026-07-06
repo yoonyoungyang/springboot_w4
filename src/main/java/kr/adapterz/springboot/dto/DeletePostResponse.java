@@ -1,14 +1,22 @@
 package kr.adapterz.springboot.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import kr.adapterz.springboot.entity.Post;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+
+@Getter
 public class DeletePostResponse {
 
-    private int post_id;
+    @JsonProperty("post_id")
+    private Long postId;
 
-    public DeletePostResponse(int post_id) {
-        this.post_id = post_id;
-    }
+    @JsonProperty("deleted_at")
+    private LocalDateTime deletedAt;
 
-    public int getPost_id() {
-        return post_id;
+    public DeletePostResponse(Post post) {
+        this.postId = post.getPostId();
+        this.deletedAt = post.getDeletedAt();
     }
 }

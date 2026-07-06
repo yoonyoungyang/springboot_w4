@@ -1,42 +1,33 @@
 package kr.adapterz.springboot.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import kr.adapterz.springboot.entity.Comment;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+@Getter
 public class UpdateCommentResponse {
 
-    private int comment_id;
-    private int post_id;
-    private int user_id;
+    @JsonProperty("comment_id")
+    private Long commentId;
+
+    @JsonProperty("post_id")
+    private Long postId;
+
+    @JsonProperty("user_id")
+    private Long userId;
+
     private String content;
-    private LocalDateTime updated_at;
+
+    @JsonProperty("updated_at")
+    private LocalDateTime updatedAt;
 
     public UpdateCommentResponse(Comment comment) {
-        this.comment_id = comment.getCommentId();
-        this.post_id = comment.getPostId();
-        this.user_id = comment.getUserId();
+        this.commentId = comment.getCommentId();
+        this.postId = comment.getPost().getPostId();
+        this.userId = comment.getUser().getUserId();
         this.content = comment.getContent();
-        this.updated_at = comment.getUpdatedAt();
-    }
-
-    public int getComment_id() {
-        return comment_id;
-    }
-
-    public int getPost_id() {
-        return post_id;
-    }
-
-    public int getUser_id() {
-        return user_id;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public LocalDateTime getUpdated_at() {
-        return updated_at;
+        this.updatedAt = comment.getUpdatedAt();
     }
 }

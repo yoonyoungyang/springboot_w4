@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@RestController // HTTP 요청을 받는 클래스 -> 컨트롤러 등록
-@RequestMapping("/users") //공통 경로
+@RestController
+@RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
@@ -30,14 +30,21 @@ public class UserController {
 
         String password = request.getPassword();
 
-        if (password== null || password.isBlank()) {
+        if (password == null || password.isBlank()) {
             errors.add(new ErrorResponse("password", "PASSWORD_NONE", "비밀번호가 비어있습니다."));
         } else if (password.length() < 8) {
             errors.add(new ErrorResponse("password", "PASSWORD_TOO_SHORT", "비밀번호가 8자 미만입니다."));
         } else if (password.length() > 20) {
             errors.add(new ErrorResponse("password", "PASSWORD_TOO_LONG", "비밀번호가 20자 초과입니다."));
-        } else if (!password.matches(".*[A-Z].*") || !password.matches(".*[a-z].*") || !password.matches(".*\\d.*") || !password.matches(".*[!@#$%^&*(),.?':{}|<>].*")) {
-            errors.add(new ErrorResponse("password", "PASSWORD_NEED_SIGN", "비밀번호에는 대문자,소문자,숫자,특수문자를 최소 1개 이상씩 포함해야 합니다."));
+        } else if (!password.matches(".*[A-Z].*")
+                || !password.matches(".*[a-z].*")
+                || !password.matches(".*\\d.*")
+                || !password.matches(".*[!@#$%^&*(),.?':{}|<>].*")) {
+            errors.add(new ErrorResponse(
+                    "password",
+                    "PASSWORD_NEED_SIGN",
+                    "비밀번호에는 대문자, 소문자, 숫자, 특수문자를 최소 1개 이상씩 포함해야 합니다."
+            ));
         }
 
         String nickname = request.getNickname();
@@ -61,28 +68,31 @@ public class UserController {
         if (userService.existsByNickname(nickname)) {
             errors.add(new ErrorResponse("nickname", "NICKNAME_DUPLICATION", "닉네임이 중복입니다."));
         }
+
         if (!errors.isEmpty()) {
             return new ApiResponse<>("duplicate_error", null, errors);
         }
+
         SignUpResponse data = userService.signup(request);
         return new ApiResponse<>("signup_success", data, null);
     }
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@RequestBody LoginRequest request) {
-
         List<ErrorResponse> errors = new ArrayList<>();
 
-        if (request.getEmail() == null) {
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
             errors.add(new ErrorResponse("email", "EMAIL_NONE", "이메일이 비어있습니다."));
         }
-        if (request.getPassword() ==null) {
+
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
             errors.add(new ErrorResponse("password", "PASSWORD_NONE", "비밀번호가 비어있습니다."));
         }
 
         if (!errors.isEmpty()) {
             return new ApiResponse<>("login_error", null, errors);
         }
+
         try {
             LoginResponse data = userService.login(request);
             return new ApiResponse<>("login_success", data, null);
@@ -93,29 +103,15 @@ public class UserController {
     }
 
     @PatchMapping("/me")
-    public ApiResponse<UpdateUserResponse> updateUser(
-            @RequestBody UpdateUserRequest request) {
-
+    public ApiResponse<UpdateUserResponse> updateUser(@RequestBody UpdateUserRequest request) {
         List<ErrorResponse> errors = new ArrayList<>();
 
-        if (request.getNickname() != null &&
-                request.getNickname().contains(" ")) {
-
-            errors.add(new ErrorResponse(
-                    "nickname",
-                    "NICKNAME_HAS_SPACE",
-                    "닉네임에 띄어쓰기가 존재합니다."
-            ));
+        if (request.getNickname() != null && request.getNickname().contains(" ")) {
+            errors.add(new ErrorResponse("nickname", "NICKNAME_HAS_SPACE", "닉네임에 띄어쓰기가 존재합니다."));
         }
 
-        if (request.getNickname() != null &&
-                request.getNickname().length() >= 11) {
-
-            errors.add(new ErrorResponse(
-                    "nickname",
-                    "NICKNAME_TOO_LONG",
-                    "닉네임이 11자 이상입니다."
-            ));
+        if (request.getNickname() != null && request.getNickname().length() >= 11) {
+            errors.add(new ErrorResponse("nickname", "NICKNAME_TOO_LONG", "닉네임이 11자 이상입니다."));
         }
 
         if (!errors.isEmpty()) {
@@ -123,73 +119,40 @@ public class UserController {
         }
 
         try {
-
-            UpdateUserResponse data =
-                    userService.updateUser(request);
-
+            UpdateUserResponse data = userService.updateUser(request);
             return new ApiResponse<>("user_update_success", data, null);
-
         } catch (RuntimeException e) {
-
-            errors.add(new ErrorResponse(
-                    "user",
-                    "USER_UPDATE_FAIL",
-                    e.getMessage()
-            ));
-
+            errors.add(new ErrorResponse("user", "USER_UPDATE_FAIL", e.getMessage()));
             return new ApiResponse<>("user_update_fail", null, errors);
         }
     }
 
     @PatchMapping("/me/password")
-    public ApiResponse<UpdatePasswordResponse> updatePassword(
-            @RequestBody UpdatePasswordRequest request) {
-
+    public ApiResponse<UpdatePasswordResponse> updatePassword(@RequestBody UpdatePasswordRequest request) {
         List<ErrorResponse> errors = new ArrayList<>();
 
         try {
-
-            UpdatePasswordResponse data =
-                    userService.updatePassword(request);
-
+            UpdatePasswordResponse data = userService.updatePassword(request);
             return new ApiResponse<>("password_update_success", data, null);
-
         } catch (RuntimeException e) {
-
-            errors.add(new ErrorResponse(
-                    "password",
-                    "PASSWORD_UPDATE_FAIL",
-                    e.getMessage()
-            ));
-
+            errors.add(new ErrorResponse("password", "PASSWORD_UPDATE_FAIL", e.getMessage()));
             return new ApiResponse<>("password_update_fail", null, errors);
         }
     }
 
     @DeleteMapping("/me")
     public ApiResponse<DeleteUserResponse> deleteUser(
-            @RequestParam int userId,
+            @RequestParam Long userId,
             @RequestParam String password) {
 
         List<ErrorResponse> errors = new ArrayList<>();
 
         try {
-
-            DeleteUserResponse data =
-                    userService.deleteUser(userId, password);
-
+            DeleteUserResponse data = userService.deleteUser(userId, password);
             return new ApiResponse<>("user_delete_success", data, null);
-
         } catch (RuntimeException e) {
-
-            errors.add(new ErrorResponse(
-                    "user",
-                    "USER_DELETE_FAIL",
-                    e.getMessage()
-            ));
-
+            errors.add(new ErrorResponse("user", "USER_DELETE_FAIL", e.getMessage()));
             return new ApiResponse<>("user_delete_fail", null, errors);
         }
     }
-
 }

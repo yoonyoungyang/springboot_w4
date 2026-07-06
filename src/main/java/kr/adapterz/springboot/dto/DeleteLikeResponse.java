@@ -1,14 +1,22 @@
 package kr.adapterz.springboot.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import kr.adapterz.springboot.entity.PostLike;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+
+@Getter
 public class DeleteLikeResponse {
 
-    private int like_id;
+    @JsonProperty("like_id")
+    private Long likeId;
 
-    public DeleteLikeResponse(int like_id) {
-        this.like_id = like_id;
-    }
+    @JsonProperty("deleted_at")
+    private LocalDateTime deletedAt;
 
-    public int getLike_id() {
-        return like_id;
+    public DeleteLikeResponse(PostLike like) {
+        this.likeId = like.getLikeId();
+        this.deletedAt = like.getDeletedAt();
     }
 }

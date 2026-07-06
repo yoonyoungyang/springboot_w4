@@ -1,34 +1,26 @@
 package kr.adapterz.springboot.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import kr.adapterz.springboot.entity.User;
+import lombok.Getter;
 
+@Getter
 public class UpdateUserResponse {
 
-    private int user_id;
+    @JsonProperty("user_id")
+    private Long userId;
+
     private String nickname;
+
     private String email;
-    private String profile_img;
+
+    @JsonProperty("profile_img")
+    private String profileImg;
 
     public UpdateUserResponse(User user) {
-        this.user_id = user.getUserId();
+        this.userId = user.getUserId();
         this.nickname = user.getNickname();
         this.email = user.getEmail();
-        this.profile_img = user.getProfileImg();
-    }
-
-    public int getUser_id() {
-        return user_id;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getProfile_img() {
-        return profile_img;
+        this.profileImg = user.getProfileImg();
     }
 }

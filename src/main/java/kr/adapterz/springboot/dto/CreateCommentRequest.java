@@ -1,15 +1,15 @@
 package kr.adapterz.springboot.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+
+@Getter
 public class CreateCommentRequest {
 
-    private int user_id;
+    @NotNull
+    @JsonProperty("user_id")
+    private Long userId;
+
     private String content;
-
-    public int getUser_id() {
-        return user_id;
-    }
-
-    public String getContent() {
-        return content;
-    }
 }

@@ -1,14 +1,22 @@
 package kr.adapterz.springboot.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import kr.adapterz.springboot.entity.Comment;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+
+@Getter
 public class DeleteCommentResponse {
 
-    private int comment_id;
+    @JsonProperty("comment_id")
+    private Long commentId;
 
-    public DeleteCommentResponse(int comment_id) {
-        this.comment_id = comment_id;
-    }
+    @JsonProperty("deleted_at")
+    private LocalDateTime deletedAt;
 
-    public int getComment_id() {
-        return comment_id;
+    public DeleteCommentResponse(Comment comment) {
+        this.commentId = comment.getCommentId();
+        this.deletedAt = comment.getDeletedAt();
     }
 }

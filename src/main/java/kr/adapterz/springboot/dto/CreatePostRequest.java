@@ -1,25 +1,23 @@
 package kr.adapterz.springboot.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+
+@Getter
 public class CreatePostRequest {
-    private int user_id;
+
+    @NotNull
+    @JsonProperty("user_id")
+    private Long userId;
+
+    @NotBlank(message = "제목이 비어있습니다.")
     private String title;
+
+    @NotNull(message = "내용이 비어있습니다.")
     private String content;
-    private String content_img;
 
-
-    public int getUser_id() {
-        return user_id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public String getContent_img() {
-        return content_img;
-    }
+    @JsonProperty("content_img")
+    private String contentImg;
 }

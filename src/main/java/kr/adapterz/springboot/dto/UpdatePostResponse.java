@@ -1,49 +1,36 @@
 package kr.adapterz.springboot.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import kr.adapterz.springboot.entity.Post;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+@Getter
 public class UpdatePostResponse {
-        private int post_id;
-        private String title;
-        private String content;
-        private String content_img;
-        private LocalDateTime updated_at;
-        private int user_id;
 
-        public UpdatePostResponse(Post post) {
-            this.post_id = post.getPostId();
-            this.title = post.getTitle();
-            this.content = post.getContent();
-            this.content_img = post.getContentImg();
-            this.updated_at = post.getUpdatedAt();
-            this.user_id = post.getUserId();
-        }
+    @JsonProperty("post_id")
+    private Long postId;
 
-        public int getPost_id() {
-            return post_id;
-        }
+    private String title;
 
-        public String getTitle() {
-            return title;
-        }
+    private String content;
 
-        public String getContent() {
-            return content;
-        }
+    @JsonProperty("content_img")
+    private String contentImg;
 
-        public String getContent_img() {
-            return content_img;
-        }
+    @JsonProperty("updated_at")
+    private LocalDateTime updatedAt;
 
-        public LocalDateTime getUpdated_at() {
-            return updated_at;
-        }
+    @JsonProperty("user_id")
+    private Long userId;
 
-        public int getUser_id() {
-            return user_id;
-        }
-
-
+    public UpdatePostResponse(Post post) {
+        this.postId = post.getPostId();
+        this.title = post.getTitle();
+        this.content = post.getContent();
+        this.contentImg = post.getContentImg();
+        this.updatedAt = post.getUpdatedAt();
+        this.userId = post.getUser().getUserId();
+    }
 }

@@ -8,13 +8,21 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "comments")
+@Table(
+        name = "post_likes",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_post_like_user_post",
+                        columnNames = {"user_id", "post_id"}
+                )
+        }
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Comment extends BaseEntity {
+public class PostLike extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long commentId;
+    private Long likeId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
@@ -24,20 +32,9 @@ public class Comment extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Lob
-    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
-    private String content;
-
     @Builder
-    private Comment(Post post, User user, String content) {
+    private PostLike(Post post, User user) {
         this.post = post;
         this.user = user;
-        this.content = content;
-    }
-
-    public void updateComment(String content) {
-        if (content != null) {
-            this.content = content;
-        }
     }
 }

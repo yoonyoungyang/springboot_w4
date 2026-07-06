@@ -2,89 +2,92 @@ package kr.adapterz.springboot.service;
 
 import kr.adapterz.springboot.dto.*;
 import kr.adapterz.springboot.entity.Post;
+import kr.adapterz.springboot.entity.User;
 import kr.adapterz.springboot.repository.PostRepository;
+import kr.adapterz.springboot.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Transactional
 public class PostService {
-    private final PostRepository postRepository;
 
-    public PostService(PostRepository postRepository) {
+    private final PostRepository postRepository;
+    private final UserRepository userRepository;
+
+    public PostService(PostRepository postRepository,
+                       UserRepository userRepository) {
         this.postRepository = postRepository;
+        this.userRepository = userRepository;
     }
 
     public CreatePostResponse createPost(CreatePostRequest request) {
-        int postId = postRepository.nextPostId();
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("게시글 생성 실패 - 회원 없음. "));
 
-        Post post = new Post(postId, request.getTitle(), request.getContent(), request.getContent_img(), request.getUser_id());
+        Post post = Post.builder()
+                .user(user)
+                .title(request.getTitle())
+                .content(request.getContent())
+                .contentImg(request.getContentImg())
+                .build();
 
         Post savedPost = postRepository.save(post);
+
         return new CreatePostResponse(savedPost);
     }
 
+    @Transactional(readOnly = true)
     public List<PostListResponse> postList() {
-        List<Post> postList = postRepository.findAll();
-        List<PostListResponse> responseList = new ArrayList<>();
-
-        for (Post post : postList) {
-            responseList.add(new PostListResponse(post));
-        }
-
-        return responseList;
+        return postRepository.findAll()
+                .stream()
+                .filter(post -> post.getDeletedAt() == null)
+                .map(PostListResponse::new)
+                .toList();
     }
 
-    public PostDetailResponse postDetail(int postId) {
-        Post onePost = postRepository.findPostById(postId);
+    public PostDetailResponse postDetail(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("게시글 상세 조회 실패 - 게시글 없음"));
 
-        if (onePost == null) {
-            throw new RuntimeException("게시글 상세 조회 실패 - 게시글 없음");
+        if (post.getDeletedAt() != null) {
+            throw new RuntimeException("게시글 상세 조회 실패 - 삭제된 게시글");
         }
-        return new PostDetailResponse(onePost);
+
+        post.increaseViewCount();
+
+        return new PostDetailResponse(post);
     }
 
+    public UpdatePostResponse updatePost(Long postId, UpdatePostRequest request) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("게시글 수정 불가 - 게시글 없음."));
 
-
-    public UpdatePostResponse updatePost(int postId,
-                                         UpdatePostRequest request) {
-
-        Post post = postRepository.findPostById(postId);
-
-        if (post == null) {
-            throw new RuntimeException("게시글 수정 불가 - 게시글 없음.");
-        }
-
-        if (post.getUserId() != request.getUser_id()) {
+        if (!post.getUser().getUserId().equals(request.getUserId())) {
             throw new RuntimeException("게시글 수정 불가 - 게시글 수정 권한이 없음.");
         }
 
         post.updatePost(
                 request.getTitle(),
                 request.getContent(),
-                request.getContent_img()
+                request.getContentImg()
         );
 
         return new UpdatePostResponse(post);
     }
 
+    public DeletePostResponse deletePost(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("게시글 삭제 불가 - 게시글 없음."));
 
-    public DeletePostResponse deletePost(int postId,
-                                         int userId) {
-
-        Post post = postRepository.findPostById(postId);
-
-        if (post == null) {
-            throw new RuntimeException("게시글 수정 불가 - 게시글 없음.");
+        if (!post.getUser().getUserId().equals(userId)) {
+            throw new RuntimeException("게시글 삭제 불가 - 게시글 삭제 권한이 없음.");
         }
 
-        if (post.getUserId() != userId) {
-            throw new RuntimeException("게시글 수정 불가 - 게시글 수정 권한이 없음.");
-        }
+        post.softDelete();
 
-        postRepository.deletePost(postId);
-
-        return new DeletePostResponse(postId);
+        return new DeletePostResponse(post);
     }
 }

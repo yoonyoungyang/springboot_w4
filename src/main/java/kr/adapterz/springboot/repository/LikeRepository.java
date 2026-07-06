@@ -1,40 +1,15 @@
 package kr.adapterz.springboot.repository;
 
-import kr.adapterz.springboot.entity.Like;
-import org.springframework.stereotype.Repository;
+import kr.adapterz.springboot.entity.Post;
+import kr.adapterz.springboot.entity.PostLike;
+import kr.adapterz.springboot.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
-@Repository
-public class LikeRepository {
+public interface LikeRepository extends JpaRepository<PostLike, Long> {
 
-    private final Map<Integer, Like> likes = new HashMap<>();
-    private int sequence = 1;
+    boolean existsByUserAndPost(User user, Post post);
 
-    public int nextLikeId() {
-        return sequence++;
-    }
-
-    public Like save(Like like) {
-        likes.put(like.getLikeId(), like);
-        return like;
-    }
-
-    public Like findLike(int postId, int userId) {
-
-        for (Like like : likes.values()) {
-            if (like.getPostId() == postId &&
-                    like.getUserId() == userId) {
-
-                return like;
-            }
-        }
-
-        return null;
-    }
-
-    public void deleteLike(int likeId) {
-        likes.remove(likeId);
-    }
+    Optional<PostLike> findByUserAndPost(User user, Post post);
 }

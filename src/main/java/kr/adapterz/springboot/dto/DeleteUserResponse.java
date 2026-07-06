@@ -1,14 +1,22 @@
 package kr.adapterz.springboot.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import kr.adapterz.springboot.entity.User;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+
+@Getter
 public class DeleteUserResponse {
 
-    private int user_id;
+    @JsonProperty("user_id")
+    private Long userId;
 
-    public DeleteUserResponse(int user_id) {
-        this.user_id = user_id;
-    }
+    @JsonProperty("deleted_at")
+    private LocalDateTime deletedAt;
 
-    public int getUser_id() {
-        return user_id;
+    public DeleteUserResponse(User user) {
+        this.userId = user.getUserId();
+        this.deletedAt = user.getDeletedAt();
     }
 }

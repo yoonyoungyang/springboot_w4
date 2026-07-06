@@ -3,65 +3,67 @@ package kr.adapterz.springboot.service;
 import kr.adapterz.springboot.dto.CreateLikeRequest;
 import kr.adapterz.springboot.dto.CreateLikeResponse;
 import kr.adapterz.springboot.dto.DeleteLikeResponse;
-import kr.adapterz.springboot.entity.Like;
 import kr.adapterz.springboot.entity.Post;
+import kr.adapterz.springboot.entity.PostLike;
+import kr.adapterz.springboot.entity.User;
 import kr.adapterz.springboot.repository.LikeRepository;
 import kr.adapterz.springboot.repository.PostRepository;
+import kr.adapterz.springboot.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class LikeService {
 
     private final LikeRepository likeRepository;
     private final PostRepository postRepository;
+    private final UserRepository userRepository;
 
     public LikeService(LikeRepository likeRepository,
-                       PostRepository postRepository) {
+                       PostRepository postRepository,
+                       UserRepository userRepository) {
         this.likeRepository = likeRepository;
         this.postRepository = postRepository;
+        this.userRepository = userRepository;
     }
 
-    public CreateLikeResponse createLike(int postId,
-                                         CreateLikeRequest request) {
+    public CreateLikeResponse createLike(Long postId, CreateLikeRequest request) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("좋아요 달기 실패 - 게시글 없음."));
 
-        Post post = postRepository.findPostById(postId);
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("좋아요 달기 실패 - 회원 없음."));
 
-        if (post == null) {
-            throw new RuntimeException("게시글이 존재하지 않습니다.");
-        }
-
-        Like existLike =
-                likeRepository.findLike(postId, request.getUser_id());
-
-        if (existLike != null) {
+        if (likeRepository.existsByUserAndPost(user, post)) {
             throw new RuntimeException("이미 좋아요를 눌렀습니다.");
         }
 
-        int likeId = likeRepository.nextLikeId();
+        PostLike like = PostLike.builder()
+                .post(post)
+                .user(user)
+                .build();
 
-        Like like = new Like(
-                likeId,
-                postId,
-                request.getUser_id()
-        );
+        PostLike savedLike = likeRepository.save(like);
 
-        Like savedLike = likeRepository.save(like);
+        post.increaseLikeCount();
 
         return new CreateLikeResponse(savedLike);
     }
 
-    public DeleteLikeResponse deleteLike(int postId,
-                                         int userId) {
+    public DeleteLikeResponse deleteLike(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("댓글 삭제 실패 - 게시글 없음."));
 
-        Like like =
-                likeRepository.findLike(postId, userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("댓글 삭제 실패 - 회원 없음."));
 
-        if (like == null) {
-            throw new RuntimeException("좋아요가 존재하지 않습니다.");
-        }
+        PostLike like = likeRepository.findByUserAndPost(user, post)
+                .orElseThrow(() -> new RuntimeException("댓글 삭제 실패 - 좋아요 없음."));
 
-        likeRepository.deleteLike(like.getLikeId());
+        like.softDelete();
+        post.decreaseLikeCount();
 
-        return new DeleteLikeResponse(like.getLikeId());
+        return new DeleteLikeResponse(like);
     }
 }

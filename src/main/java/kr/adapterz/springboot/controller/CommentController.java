@@ -18,19 +18,15 @@ public class CommentController {
         this.commentService = commentService;
     }
 
-    @PostMapping("")
+    @PostMapping
     public ApiResponse<CreateCommentResponse> createComment(
-            @PathVariable int postId,
+            @PathVariable Long postId,
             @RequestBody CreateCommentRequest request) {
 
         List<ErrorResponse> errors = new ArrayList<>();
 
         if (request.getContent() == null || request.getContent().isBlank()) {
-            errors.add(new ErrorResponse(
-                    "content",
-                    "CONTENT_NONE",
-                    "댓글 내용이 비어있습니다."
-            ));
+            errors.add(new ErrorResponse("content", "CONTENT_NONE", "댓글 내용이 비어있습니다."));
         }
 
         if (!errors.isEmpty()) {
@@ -38,36 +34,23 @@ public class CommentController {
         }
 
         try {
-            CreateCommentResponse data =
-                    commentService.createComment(postId, request);
-
+            CreateCommentResponse data = commentService.createComment(postId, request);
             return new ApiResponse<>("comment_create_success", data, null);
-
         } catch (RuntimeException e) {
-
-            errors.add(new ErrorResponse(
-                    "post_id",
-                    "COMMENT_CREATE_FAIL",
-                    e.getMessage()
-            ));
-
+            errors.add(new ErrorResponse("post_id", "COMMENT_CREATE_FAIL", e.getMessage()));
             return new ApiResponse<>("comment_create_fail", null, errors);
         }
     }
 
     @PatchMapping("/{commentId}")
     public ApiResponse<UpdateCommentResponse> updateComment(
-            @PathVariable int commentId,
+            @PathVariable Long commentId,
             @RequestBody UpdateCommentRequest request) {
 
         List<ErrorResponse> errors = new ArrayList<>();
 
         if (request.getContent() == null || request.getContent().isBlank()) {
-            errors.add(new ErrorResponse(
-                    "content",
-                    "CONTENT_NONE",
-                    "댓글 내용이 비어있습니다."
-            ));
+            errors.add(new ErrorResponse("content", "CONTENT_NONE", "댓글 내용이 비어있습니다."));
         }
 
         if (!errors.isEmpty()) {
@@ -75,46 +58,26 @@ public class CommentController {
         }
 
         try {
-
-            UpdateCommentResponse data =
-                    commentService.updateComment(commentId, request);
-
+            UpdateCommentResponse data = commentService.updateComment(commentId, request);
             return new ApiResponse<>("comment_edit_success", data, null);
-
         } catch (RuntimeException e) {
-
-            errors.add(new ErrorResponse(
-                    "comment_id",
-                    "COMMENT_EDIT_FAIL",
-                    e.getMessage()
-            ));
-
+            errors.add(new ErrorResponse("comment_id", "COMMENT_EDIT_FAIL", e.getMessage()));
             return new ApiResponse<>("comment_edit_fail", null, errors);
         }
     }
 
     @DeleteMapping("/{commentId}")
     public ApiResponse<DeleteCommentResponse> deleteComment(
-            @PathVariable int commentId,
-            @RequestParam int userId) {
+            @PathVariable Long commentId,
+            @RequestParam Long userId) {
 
         List<ErrorResponse> errors = new ArrayList<>();
 
         try {
-
-            DeleteCommentResponse data =
-                    commentService.deleteComment(commentId, userId);
-
+            DeleteCommentResponse data = commentService.deleteComment(commentId, userId);
             return new ApiResponse<>("comment_delete_success", data, null);
-
         } catch (RuntimeException e) {
-
-            errors.add(new ErrorResponse(
-                    "comment_id",
-                    "COMMENT_DELETE_FAIL",
-                    e.getMessage()
-            ));
-
+            errors.add(new ErrorResponse("comment_id", "COMMENT_DELETE_FAIL", e.getMessage()));
             return new ApiResponse<>("comment_delete_fail", null, errors);
         }
     }

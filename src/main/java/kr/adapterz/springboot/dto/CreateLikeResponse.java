@@ -1,36 +1,44 @@
 package kr.adapterz.springboot.dto;
 
-import kr.adapterz.springboot.entity.Like;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import kr.adapterz.springboot.entity.PostLike;
 
 import java.time.LocalDateTime;
 
 public class CreateLikeResponse {
 
-    private int like_id;
-    private int post_id;
-    private int user_id;
-    private LocalDateTime created_at;
+    @JsonProperty("like_id")
+    private Long likeId;
 
-    public CreateLikeResponse(Like like) {
-        this.like_id = like.getLikeId();
-        this.post_id = like.getPostId();
-        this.user_id = like.getUserId();
-        this.created_at = like.getCreatedAt();
+    @JsonProperty("post_id")
+    private Long postId;
+
+    @JsonProperty("user_id")
+    private Long userId;
+
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
+
+    public CreateLikeResponse(PostLike like) {
+        this.likeId = like.getLikeId();
+        this.postId = like.getPost().getPostId();
+        this.userId = like.getUser().getUserId();
+        this.createdAt = like.getCreatedAt();
     }
 
-    public int getLike_id() {
-        return like_id;
+    public Long getLikeId() {
+        return likeId;
     }
 
-    public int getPost_id() {
-        return post_id;
+    public Long getPostId() {
+        return postId;
     }
 
-    public int getUser_id() {
-        return user_id;
+    public Long getUserId() {
+        return userId;
     }
 
-    public LocalDateTime getCreated_at() {
-        return created_at;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 }
