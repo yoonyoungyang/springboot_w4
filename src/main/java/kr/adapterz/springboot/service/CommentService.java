@@ -10,6 +10,8 @@ import kr.adapterz.springboot.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Transactional
 public class CommentService {
@@ -70,5 +72,24 @@ public class CommentService {
         comment.getPost().decreaseCommentCount();
 
         return new DeleteCommentResponse(comment);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CommentListResponse> commentList(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("댓글 목록 조회 실패 - 게시글 없음."));
+
+        if (post.getDeletedAt() != null) {
+            throw new RuntimeException("댓글 목록 조회 실패 - 삭제된 게시글.");
+        }
+
+        List<Comment> comments =
+                commentRepository.findByPostAndDeletedAtIsNullOrderByCreatedAtAsc(post);
+
+        List<CommentListResponse> responses = comments.stream()
+                .map(comment -> new CommentListResponse(comment))
+                .toList();
+
+        return responses;
     }
 }

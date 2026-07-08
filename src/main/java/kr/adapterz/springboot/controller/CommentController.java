@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+@CrossOrigin(origins = "http://127.0.0.1:5500")
 
 @RestController
 @RequestMapping("/posts/{postId}/comments")
@@ -17,6 +18,29 @@ public class CommentController {
     public CommentController(CommentService commentService) {
         this.commentService = commentService;
     }
+
+
+    @GetMapping
+    public ApiResponse<List<CommentListResponse>> commentList(
+            @PathVariable Long postId) {
+
+        List<ErrorResponse> errors = new ArrayList<>();
+
+        try {
+            List<CommentListResponse> data = commentService.commentList(postId);
+            return new ApiResponse<>("comment_list_success", data, null);
+        } catch (RuntimeException e) {
+            errors.add(new ErrorResponse(
+                    "post_id",
+                    "COMMENT_LIST_FAIL",
+                    e.getMessage()
+            ));
+
+            return new ApiResponse<>("comment_list_fail", null, errors);
+        }
+    }
+
+    
 
     @PostMapping
     public ApiResponse<CreateCommentResponse> createComment(
