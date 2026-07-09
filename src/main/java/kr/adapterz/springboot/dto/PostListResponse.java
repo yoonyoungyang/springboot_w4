@@ -26,6 +26,15 @@ public class PostListResponse {
     @JsonProperty("user_id")
     private Long userId;
 
+    @JsonProperty("view_count")
+    private int viewCount;
+
+    @JsonProperty("like_count")
+    private int likeCount;
+
+    @JsonProperty("comment_count")
+    private int commentCount;
+
     public PostListResponse(Post post) {
         this.postId = post.getPostId();
         this.title = post.getTitle();
@@ -33,5 +42,8 @@ public class PostListResponse {
         this.createdAt = post.getCreatedAt();
         this.updatedAt = post.getUpdatedAt();
         this.userId = post.getUser().getUserId();
+        this.viewCount = post.getViewCount();
+        this.likeCount = post.getLikeCount();
+        this.commentCount = post.getCommentCount();
     }
 }
