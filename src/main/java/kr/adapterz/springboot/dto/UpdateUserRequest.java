@@ -11,6 +11,7 @@ public class UpdateUserRequest {
     @JsonProperty("user_id")
     private Long userId;
 
+    @NotNull
     private String nickname;
 
     @JsonProperty("profile_img")

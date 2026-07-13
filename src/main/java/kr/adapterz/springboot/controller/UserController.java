@@ -104,6 +104,19 @@ public class UserController {
         }
     }
 
+    @GetMapping("/me")
+    public ApiResponse<UserInfoResponse> getUser(@RequestParam Long userId) {
+        List<ErrorResponse> errors = new ArrayList<>();
+
+        try {
+            UserInfoResponse data = userService.getUser(userId);
+            return new ApiResponse<>("user_info_success", data, null);
+        } catch (RuntimeException e) {
+            errors.add(new ErrorResponse("user", "USER_NOT_FOUND", e.getMessage()));
+            return new ApiResponse<>("user_info_fail", null, errors);
+        }
+    }
+
     @PatchMapping("/me")
     public ApiResponse<UpdateUserResponse> updateUser(@RequestBody UpdateUserRequest request) {
         List<ErrorResponse> errors = new ArrayList<>();
