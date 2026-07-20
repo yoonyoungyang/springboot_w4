@@ -3,6 +3,12 @@ package kr.adapterz.springboot.service;
 import kr.adapterz.springboot.dto.*;
 import kr.adapterz.springboot.entity.User;
 import kr.adapterz.springboot.repository.UserRepository;
+import kr.adapterz.springboot.security.TokenProvider;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,9 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final TokenProvider tokenProvider;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, TokenProvider tokenProvider) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.tokenProvider = tokenProvider;
     }
 
     @Transactional(readOnly = true)
@@ -34,17 +44,21 @@ public class UserService {
         if (userRepository.existsByNickname(request.getNickname())) {
             throw new RuntimeException("회원가입 실패 - 이미 사용 중인 닉네임");
         }
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
 
         User user = User.builder()
                 .email(request.getEmail())
-                .password(request.getPassword())
+                .password(encodedPassword)
                 .nickname(request.getNickname())
                 .profileImg(request.getProfileImg())
                 .build();
 
+
         User savedUser = userRepository.save(user);
 
-        return new SignUpResponse(savedUser);
+        String token = tokenProvider.createToken(String.format("%s:%s", user.getUserId(),user.getRole()));
+
+        return new SignUpResponse(savedUser, token);
     }
 
     @Transactional(readOnly = true)
@@ -52,13 +66,15 @@ public class UserService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("로그인 실패 - 사용자 정보 찾을 수 없음."));
 
-        if (!user.getPassword().equals(request.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("로그인 실패 - 사용자 정보 찾을 수 없음.");
         }
+        String token = tokenProvider.createToken(String.format("%s:%s", user.getUserId(), user.getRole()));
 
-        return new LoginResponse(user);
+        return new LoginResponse(user, token);
     }
 
+    @PreAuthorize("hasRole('USER')")
     public UpdateUserResponse updateUser(UpdateUserRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("회원 정보 수정 실패 - 회원 없음."));
@@ -69,12 +85,20 @@ public class UserService {
             throw new RuntimeException("회원 정보 수정 실패 - 닉네임 중복.");
         }
 
-        user.updateUser(
-                request.getNickname(),
-                request.getProfileImg()
-        );
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long loginUserId = Long.valueOf(authentication.getName());
 
-        return new UpdateUserResponse(user);
+        if (request.getUserId() == loginUserId) {
+
+            user.updateUser(
+                    request.getNickname(),
+                    request.getProfileImg()
+            );
+
+            return new UpdateUserResponse(user);
+        } else {
+            throw new RuntimeException("회원 정보 수정 실패 - 로그인한 사용자와 요청한 사용자가 다릅니다.");
+        }
     }
     public UserInfoResponse getUser(Long userId) {
         User user = userRepository.findById(userId)
@@ -83,13 +107,16 @@ public class UserService {
         return new UserInfoResponse(user);
     }
 
+    @PreAuthorize("hasRole('USER')")
     public UpdatePasswordResponse updatePassword(UpdatePasswordRequest request) {
-        User user = userRepository.findById(request.getUserId())
+
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long loginUserId = Long.valueOf(authentication.getName());
+        User user = userRepository.findById(loginUserId)
                 .orElseThrow(() -> new RuntimeException("비밀번호 변경 실패 - 회원 없음."));
 
-        if (!user.getPassword().equals(request.getCurrentPassword())) {
-            throw new RuntimeException("비밀번호 변경 실패 - 현재 비밀번호 일치하지 않음.");
-        }
+
 
         String password = request.getNewPassword();
 
@@ -112,16 +139,24 @@ public class UserService {
             throw new RuntimeException("비밀번호 변경 실패 - 비밀번호 형식이 올바르지 않음.");
         }
 
-        user.updatePassword(password);
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("비밀번호 변경 실패 - 현재 비밀번호 일치하지 않음.");
+        }
+
+        user.updatePassword(request.getNewPassword());
 
         return new UpdatePasswordResponse(user);
     }
 
+    @PreAuthorize("hasRole('USER')")
     public DeleteUserResponse deleteUser(Long userId, String password) {
-        User user = userRepository.findById(userId)
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long loginUserId = Long.valueOf(authentication.getName());
+
+        User user = userRepository.findById(loginUserId)
                 .orElseThrow(() -> new RuntimeException("회원 탈퇴 실패 - 회원 없음."));
 
-        if (!user.getPassword().equals(password)) {
+        if(!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("회원 탈퇴 실패 - 비밀번호 다름.");
         }
 

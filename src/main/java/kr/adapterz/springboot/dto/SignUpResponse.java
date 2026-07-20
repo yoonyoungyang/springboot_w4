@@ -21,11 +21,14 @@ public class SignUpResponse {
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
 
-    public SignUpResponse(User user) {
+    private String token;
+
+    public SignUpResponse(User user, String token) {
         this.userId = user.getUserId();
         this.email = user.getEmail();
         this.nickname = user.getNickname();
         this.profileImg = user.getProfileImg();
         this.createdAt = user.getCreatedAt();
+        this.token = token;
     }
 }

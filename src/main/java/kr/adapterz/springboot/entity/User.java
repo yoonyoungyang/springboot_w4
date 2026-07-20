@@ -20,8 +20,7 @@ public class User extends BaseEntity {
     @Column(name = "email", unique = true, nullable = false)
     private String email;
 
-    @Column(name = "password", nullable = false)
-    @Size(min = 8, max = 20, message = "비밀번호는 8~20자여야 합니다.")
+
     private String password;
 
     @Column(name = "nickname", unique = true, nullable = false)
@@ -31,13 +30,20 @@ public class User extends BaseEntity {
     @Column(name = "profile_img")
     private String profileImg;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private
+    UserRole role;
+
     @Builder
     private User(String email, String password, String nickname, String profileImg) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.profileImg = profileImg;
+        this.role = UserRole.USER;
     }
+
 
     public void updateUser(String nickname, String profileImg) {
         if (nickname != null) {
@@ -52,4 +58,5 @@ public class User extends BaseEntity {
     public void updatePassword(String password) {
         this.password = password;
     }
+
 }

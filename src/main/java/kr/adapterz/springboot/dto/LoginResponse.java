@@ -17,10 +17,13 @@ public class LoginResponse {
     @JsonProperty("profile_img")
     private String profileImg;
 
-    public LoginResponse(User user) {
+    private String token;
+
+    public LoginResponse(User user, String token) {
         this.userId = user.getUserId();
         this.nickname = user.getNickname();
         this.email = user.getEmail();
         this.profileImg = user.getProfileImg();
+        this.token = token;
     }
 }
