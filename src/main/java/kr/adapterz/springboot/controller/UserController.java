@@ -3,6 +3,8 @@ package kr.adapterz.springboot.controller;
 import kr.adapterz.springboot.common.ApiResponse;
 import kr.adapterz.springboot.dto.*;
 import kr.adapterz.springboot.service.UserService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -105,11 +107,12 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ApiResponse<UserInfoResponse> getUser(@RequestParam Long userId) {
+    public ApiResponse<UserInfoResponse> getUser(@AuthenticationPrincipal UserDetails loginUser) {
         List<ErrorResponse> errors = new ArrayList<>();
+        Long loginUserId = Long.valueOf(loginUser.getUsername());
 
         try {
-            UserInfoResponse data = userService.getUser(userId);
+            UserInfoResponse data = userService.getUser(loginUserId);
             return new ApiResponse<>("user_info_success", data, null);
         } catch (RuntimeException e) {
             errors.add(new ErrorResponse("user", "USER_NOT_FOUND", e.getMessage()));
@@ -118,8 +121,9 @@ public class UserController {
     }
 
     @PatchMapping("/me")
-    public ApiResponse<UpdateUserResponse> updateUser(@RequestBody UpdateUserRequest request) {
+    public ApiResponse<UpdateUserResponse> updateUser(@RequestBody UpdateUserRequest request, @AuthenticationPrincipal UserDetails loginUser) {
         List<ErrorResponse> errors = new ArrayList<>();
+        Long loginUserId = Long.valueOf(loginUser.getUsername());
 
         if (request.getNickname() != null && request.getNickname().contains(" ")) {
             errors.add(new ErrorResponse("nickname", "NICKNAME_HAS_SPACE", "닉네임에 띄어쓰기가 존재합니다."));
@@ -134,7 +138,7 @@ public class UserController {
         }
 
         try {
-            UpdateUserResponse data = userService.updateUser(request);
+            UpdateUserResponse data = userService.updateUser(request, loginUserId);
             return new ApiResponse<>("user_update_success", data, null);
         } catch (RuntimeException e) {
             errors.add(new ErrorResponse("user", "USER_UPDATE_FAIL", e.getMessage()));
@@ -143,11 +147,13 @@ public class UserController {
     }
 
     @PatchMapping("/me/password")
-    public ApiResponse<UpdatePasswordResponse> updatePassword(@RequestBody UpdatePasswordRequest request) {
+    public ApiResponse<UpdatePasswordResponse> updatePassword(@RequestBody UpdatePasswordRequest request, @AuthenticationPrincipal UserDetails loginUser) {
         List<ErrorResponse> errors = new ArrayList<>();
+        Long loginUserId = Long.valueOf(loginUser.getUsername());
+
 
         try {
-            UpdatePasswordResponse data = userService.updatePassword(request);
+            UpdatePasswordResponse data = userService.updatePassword(request, loginUserId);
             return new ApiResponse<>("password_update_success", data, null);
         } catch (RuntimeException e) {
             errors.add(new ErrorResponse("password", "PASSWORD_UPDATE_FAIL", e.getMessage()));
@@ -156,14 +162,14 @@ public class UserController {
     }
 
     @DeleteMapping("/me")
-    public ApiResponse<DeleteUserResponse> deleteUser(
-            @RequestParam Long userId,
-            @RequestParam String password) {
+    public ApiResponse<DeleteUserResponse> deleteUser(@AuthenticationPrincipal UserDetails loginUser) {
 
         List<ErrorResponse> errors = new ArrayList<>();
+        Long loginUserId = Long.valueOf(loginUser.getUsername());
+
 
         try {
-            DeleteUserResponse data = userService.deleteUser(userId, password);
+            DeleteUserResponse data = userService.deleteUser(loginUserId);
             return new ApiResponse<>("user_delete_success", data, null);
         } catch (RuntimeException e) {
             errors.add(new ErrorResponse("user", "USER_DELETE_FAIL", e.getMessage()));

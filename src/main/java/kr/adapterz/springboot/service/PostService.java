@@ -23,8 +23,8 @@ public class PostService {
         this.userRepository = userRepository;
     }
 
-    public CreatePostResponse createPost(CreatePostRequest request) {
-        User user = userRepository.findById(request.getUserId())
+    public CreatePostResponse createPost(CreatePostRequest request, Long loginUserId) {
+        User user = userRepository.findById(loginUserId)
                 .orElseThrow(() -> new RuntimeException("게시글 생성 실패 - 회원 없음. "));
 
         Post post = Post.builder()
@@ -61,11 +61,11 @@ public class PostService {
         return new PostDetailResponse(post);
     }
 
-    public UpdatePostResponse updatePost(Long postId, UpdatePostRequest request) {
+    public UpdatePostResponse updatePost(Long postId, UpdatePostRequest request, Long loginUserId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("게시글 수정 불가 - 게시글 없음."));
 
-        if (!post.getUser().getUserId().equals(request.getUserId())) {
+        if (!post.getUser().getUserId().equals(loginUserId)) {
             throw new RuntimeException("게시글 수정 불가 - 게시글 수정 권한이 없음.");
         }
 
@@ -78,11 +78,11 @@ public class PostService {
         return new UpdatePostResponse(post);
     }
 
-    public DeletePostResponse deletePost(Long postId, Long userId) {
+    public DeletePostResponse deletePost(Long postId, Long loginUserId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("게시글 삭제 불가 - 게시글 없음."));
 
-        if (!post.getUser().getUserId().equals(userId)) {
+        if (!post.getUser().getUserId().equals(loginUserId)) {
             throw new RuntimeException("게시글 삭제 불가 - 게시글 삭제 권한이 없음.");
         }
 

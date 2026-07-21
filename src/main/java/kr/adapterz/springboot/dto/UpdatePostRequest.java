@@ -8,8 +8,8 @@ import lombok.Getter;
 public class UpdatePostRequest {
 
     @NotNull
-    @JsonProperty("user_id")
-    private Long userId;
+    @JsonProperty("post_id")
+    private Long postId;
 
     private String title;
 

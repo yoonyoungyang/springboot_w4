@@ -6,10 +6,7 @@ import jakarta.validation.constraints.NotNull;
 public class CreateLikeRequest {
 
     @NotNull
-    @JsonProperty("user_id")
-    private Long userId;
+    @JsonProperty("post_id")
+    private Long postId;
 
-    public Long getUserId() {
-        return userId;
-    }
 }

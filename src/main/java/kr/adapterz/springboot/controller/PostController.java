@@ -3,6 +3,8 @@ package kr.adapterz.springboot.controller;
 import kr.adapterz.springboot.common.ApiResponse;
 import kr.adapterz.springboot.dto.*;
 import kr.adapterz.springboot.service.PostService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -21,10 +23,12 @@ public class PostController {
     }
 
     @PostMapping
-    public ApiResponse<CreatePostResponse> createPost(@RequestBody CreatePostRequest request) {
+    public ApiResponse<CreatePostResponse> createPost(@RequestBody CreatePostRequest request, @AuthenticationPrincipal UserDetails loginUser) {
         List<ErrorResponse> errors = new ArrayList<>();
+        Long loginUserId = Long.valueOf(loginUser.getUsername());
 
-        if (request.getUserId() == null || request.getUserId() <= 0) {
+
+        if (loginUserId == null || loginUserId <= 0) {
             errors.add(new ErrorResponse("user_id", "USER_ID_NONE", "작성자 정보가 없습니다."));
         }
 
@@ -43,7 +47,7 @@ public class PostController {
         }
 
         try {
-            CreatePostResponse data = postService.createPost(request);
+            CreatePostResponse data = postService.createPost(request, loginUserId);
             return new ApiResponse<>("post_create_success", data, null);
         } catch (RuntimeException e) {
             errors.add(new ErrorResponse("post", "POST_CREATE_FAIL", e.getMessage()));
@@ -73,9 +77,10 @@ public class PostController {
     @PatchMapping("/{postId}")
     public ApiResponse<UpdatePostResponse> updatePost(
             @PathVariable Long postId,
-            @RequestBody UpdatePostRequest request) {
+            @RequestBody UpdatePostRequest request, @AuthenticationPrincipal UserDetails loginUser) {
 
         List<ErrorResponse> errors = new ArrayList<>();
+        Long loginUserId = Long.valueOf(loginUser.getUsername());
 
         if (request.getTitle() != null && request.getTitle().length() > 26) {
             errors.add(new ErrorResponse("title", "TITLE_TOO_LONG", "제목이 26자를 초과했습니다."));
@@ -86,7 +91,7 @@ public class PostController {
         }
 
         try {
-            UpdatePostResponse data = postService.updatePost(postId, request);
+            UpdatePostResponse data = postService.updatePost(postId, request, loginUserId);
             return new ApiResponse<>("post_edit_success", data, null);
         } catch (RuntimeException e) {
             errors.add(new ErrorResponse("post_id", "POST_EDIT_FAIL", e.getMessage()));
@@ -97,12 +102,13 @@ public class PostController {
     @DeleteMapping("/{postId}")
     public ApiResponse<DeletePostResponse> deletePost(
             @PathVariable Long postId,
-            @RequestParam Long userId) {
+            @AuthenticationPrincipal UserDetails loginUser) {
 
         List<ErrorResponse> errors = new ArrayList<>();
+        Long loginUserId = Long.valueOf(loginUser.getUsername());
 
         try {
-            DeletePostResponse data = postService.deletePost(postId, userId);
+            DeletePostResponse data = postService.deletePost(postId, loginUserId);
             return new ApiResponse<>("post_delete_success", data, null);
         } catch (RuntimeException e) {
             errors.add(new ErrorResponse("post_id", "POST_DELETE_FAIL", e.getMessage()));

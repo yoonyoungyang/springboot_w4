@@ -8,10 +8,6 @@ import lombok.Getter;
 @Getter
 public class CreateCommentRequest {
 
-    @NotNull
-    @JsonProperty("user_id")
-    private Long userId;
-
     @NotBlank
     private String content;
 }

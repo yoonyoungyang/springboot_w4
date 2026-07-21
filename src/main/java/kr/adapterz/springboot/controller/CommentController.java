@@ -3,6 +3,8 @@ package kr.adapterz.springboot.controller;
 import kr.adapterz.springboot.common.ApiResponse;
 import kr.adapterz.springboot.dto.*;
 import kr.adapterz.springboot.service.CommentService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -45,9 +47,11 @@ public class CommentController {
     @PostMapping
     public ApiResponse<CreateCommentResponse> createComment(
             @PathVariable Long postId,
-            @RequestBody CreateCommentRequest request) {
+            @RequestBody CreateCommentRequest request, @AuthenticationPrincipal UserDetails loginUser ) {
 
         List<ErrorResponse> errors = new ArrayList<>();
+        Long loginUserId = Long.valueOf(loginUser.getUsername());
+
 
         if (request.getContent() == null || request.getContent().isBlank()) {
             errors.add(new ErrorResponse("content", "CONTENT_NONE", "댓글 내용이 비어있습니다."));
@@ -58,7 +62,7 @@ public class CommentController {
         }
 
         try {
-            CreateCommentResponse data = commentService.createComment(postId, request);
+            CreateCommentResponse data = commentService.createComment(postId, request, loginUserId);
             return new ApiResponse<>("comment_create_success", data, null);
         } catch (RuntimeException e) {
             errors.add(new ErrorResponse("post_id", "COMMENT_CREATE_FAIL", e.getMessage()));
@@ -69,9 +73,11 @@ public class CommentController {
     @PatchMapping("/{commentId}")
     public ApiResponse<UpdateCommentResponse> updateComment(
             @PathVariable Long commentId,
-            @RequestBody UpdateCommentRequest request) {
+            @RequestBody UpdateCommentRequest request, @AuthenticationPrincipal UserDetails loginUser) {
 
         List<ErrorResponse> errors = new ArrayList<>();
+        Long loginUserId = Long.valueOf(loginUser.getUsername());
+
 
         if (request.getContent() == null || request.getContent().isBlank()) {
             errors.add(new ErrorResponse("content", "CONTENT_NONE", "댓글 내용이 비어있습니다."));
@@ -82,7 +88,7 @@ public class CommentController {
         }
 
         try {
-            UpdateCommentResponse data = commentService.updateComment(commentId, request);
+            UpdateCommentResponse data = commentService.updateComment(commentId, request, loginUserId);
             return new ApiResponse<>("comment_edit_success", data, null);
         } catch (RuntimeException e) {
             errors.add(new ErrorResponse("comment_id", "COMMENT_EDIT_FAIL", e.getMessage()));
@@ -93,12 +99,14 @@ public class CommentController {
     @DeleteMapping("/{commentId}")
     public ApiResponse<DeleteCommentResponse> deleteComment(
             @PathVariable Long commentId,
-            @RequestParam Long userId) {
+            @AuthenticationPrincipal UserDetails loginUser) {
 
         List<ErrorResponse> errors = new ArrayList<>();
+        Long loginUserId = Long.valueOf(loginUser.getUsername());
+
 
         try {
-            DeleteCommentResponse data = commentService.deleteComment(commentId, userId);
+            DeleteCommentResponse data = commentService.deleteComment(commentId, loginUserId);
             return new ApiResponse<>("comment_delete_success", data, null);
         } catch (RuntimeException e) {
             errors.add(new ErrorResponse("comment_id", "COMMENT_DELETE_FAIL", e.getMessage()));

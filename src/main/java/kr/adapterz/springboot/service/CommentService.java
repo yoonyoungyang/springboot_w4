@@ -28,10 +28,10 @@ public class CommentService {
         this.userRepository = userRepository;
     }
 
-    public CreateCommentResponse createComment(Long postId, CreateCommentRequest request) {
+    public CreateCommentResponse createComment(Long postId, CreateCommentRequest request, Long loginUserId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("댓글 달기 실패  - 게시글 없음."));
-        User user = userRepository.findById(request.getUserId())
+        User user = userRepository.findById(loginUserId)
                 .orElseThrow(() -> new RuntimeException("댓글 달기 실패 - 회원 없음."));
 
         Comment comment = Comment.builder()
@@ -47,11 +47,11 @@ public class CommentService {
         return new CreateCommentResponse(savedComment);
     }
 
-    public UpdateCommentResponse updateComment(Long commentId, UpdateCommentRequest request) {
+    public UpdateCommentResponse updateComment(Long commentId, UpdateCommentRequest request, Long loginUserId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("댓글 수정 실패 - 댓글 없음."));
 
-        if (!comment.getUser().getUserId().equals(request.getUserId())) {
+        if (!comment.getUser().getUserId().equals(loginUserId)) {
             throw new RuntimeException("댓글 수정 실패 - 댓글 수정 권한 없음.");
         }
 
@@ -60,11 +60,11 @@ public class CommentService {
         return new UpdateCommentResponse(comment);
     }
 
-    public DeleteCommentResponse deleteComment(Long commentId, Long userId) {
+    public DeleteCommentResponse deleteComment(Long commentId, Long loginUserId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("댓글 삭제 실패 - 댓글 없음."));
 
-        if (!comment.getUser().getUserId().equals(userId)) {
+        if (!comment.getUser().getUserId().equals(loginUserId)) {
             throw new RuntimeException("댓글 삭제 실패 - 댓글 삭제 권한 없음.");
         }
 

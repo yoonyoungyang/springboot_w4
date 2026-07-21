@@ -7,10 +7,7 @@ import lombok.Getter;
 
 @Getter
 public class UpdatePasswordRequest {
-
-    @NotNull
-    @JsonProperty("user_id")
-    private Long userId;
+    
 
     @NotBlank(message = "이전 비밀번호가 비어있습니다.")
     @JsonProperty("current_password")

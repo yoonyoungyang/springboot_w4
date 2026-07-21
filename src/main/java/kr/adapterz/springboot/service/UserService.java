@@ -6,7 +6,6 @@ import kr.adapterz.springboot.repository.UserRepository;
 import kr.adapterz.springboot.security.TokenProvider;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -74,9 +73,15 @@ public class UserService {
         return new LoginResponse(user, token);
     }
 
+    public UserInfoResponse getUser(Long loginUserId) {
+        User user = userRepository.findById(loginUserId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+        return new UserInfoResponse(user);
+    }
+
     @PreAuthorize("hasRole('USER')")
-    public UpdateUserResponse updateUser(UpdateUserRequest request) {
-        User user = userRepository.findById(request.getUserId())
+    public UpdateUserResponse updateUser(UpdateUserRequest request, Long loginUserId) {
+        User user = userRepository.findById(loginUserId)
                 .orElseThrow(() -> new RuntimeException("회원 정보 수정 실패 - 회원 없음."));
 
         if (request.getNickname() != null
@@ -85,34 +90,19 @@ public class UserService {
             throw new RuntimeException("회원 정보 수정 실패 - 닉네임 중복.");
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long loginUserId = Long.valueOf(authentication.getName());
 
-        if (request.getUserId() == loginUserId) {
 
-            user.updateUser(
-                    request.getNickname(),
-                    request.getProfileImg()
-            );
+        user.updateUser(
+                request.getNickname(),
+                request.getProfileImg()
+        );
 
-            return new UpdateUserResponse(user);
-        } else {
-            throw new RuntimeException("회원 정보 수정 실패 - 로그인한 사용자와 요청한 사용자가 다릅니다.");
-        }
-    }
-    public UserInfoResponse getUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
-
-        return new UserInfoResponse(user);
+        return new UpdateUserResponse(user);
     }
 
     @PreAuthorize("hasRole('USER')")
-    public UpdatePasswordResponse updatePassword(UpdatePasswordRequest request) {
+    public UpdatePasswordResponse updatePassword(UpdatePasswordRequest request, Long loginUserId) {
 
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long loginUserId = Long.valueOf(authentication.getName());
         User user = userRepository.findById(loginUserId)
                 .orElseThrow(() -> new RuntimeException("비밀번호 변경 실패 - 회원 없음."));
 
@@ -149,9 +139,7 @@ public class UserService {
     }
 
     @PreAuthorize("hasRole('USER')")
-    public DeleteUserResponse deleteUser(Long userId, String password) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long loginUserId = Long.valueOf(authentication.getName());
+    public DeleteUserResponse deleteUser(Long loginUserId) {
 
         User user = userRepository.findById(loginUserId)
                 .orElseThrow(() -> new RuntimeException("회원 탈퇴 실패 - 회원 없음."));

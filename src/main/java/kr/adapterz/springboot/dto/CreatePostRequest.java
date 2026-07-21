@@ -8,10 +8,6 @@ import lombok.Getter;
 @Getter
 public class CreatePostRequest {
 
-    @NotNull
-    @JsonProperty("user_id")
-    private Long userId;
-
     @NotBlank(message = "제목이 비어있습니다.")
     private String title;
 

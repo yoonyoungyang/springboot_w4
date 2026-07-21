@@ -28,11 +28,11 @@ public class LikeService {
         this.userRepository = userRepository;
     }
 
-    public CreateLikeResponse createLike(Long postId, CreateLikeRequest request) {
+    public CreateLikeResponse createLike(Long postId, CreateLikeRequest request, Long loginUserId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("좋아요 달기 실패 - 게시글 없음."));
 
-        User user = userRepository.findById(request.getUserId())
+        User user = userRepository.findById(loginUserId)
                 .orElseThrow(() -> new RuntimeException("좋아요 달기 실패 - 회원 없음."));
 
         if (likeRepository.existsByUserAndPost(user, post)) {
@@ -51,11 +51,11 @@ public class LikeService {
         return new CreateLikeResponse(savedLike);
     }
 
-    public DeleteLikeResponse deleteLike(Long postId, Long userId) {
+    public DeleteLikeResponse deleteLike(Long postId, Long loginUserId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("댓글 삭제 실패 - 게시글 없음."));
 
-        User user = userRepository.findById(userId)
+        User user = userRepository.findById(loginUserId)
                 .orElseThrow(() -> new RuntimeException("댓글 삭제 실패 - 회원 없음."));
 
         PostLike like = likeRepository.findByUserAndPost(user, post)

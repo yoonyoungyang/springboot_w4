@@ -9,8 +9,8 @@ import lombok.Getter;
 public class UpdateCommentRequest {
 
     @NotNull
-    @JsonProperty("user_id")
-    private Long userId;
+    @JsonProperty("post_id")
+    private Long postId;
 
 
     @NotBlank
