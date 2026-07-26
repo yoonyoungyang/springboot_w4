@@ -3,6 +3,7 @@ package kr.adapterz.springboot.service;
 import kr.adapterz.springboot.dto.*;
 import kr.adapterz.springboot.entity.Post;
 import kr.adapterz.springboot.entity.User;
+import kr.adapterz.springboot.repository.LikeRepository;
 import kr.adapterz.springboot.repository.PostRepository;
 import kr.adapterz.springboot.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -16,15 +17,17 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final LikeRepository likeRepository;
 
     public PostService(PostRepository postRepository,
-                       UserRepository userRepository) {
+                       UserRepository userRepository, LikeRepository likeRepository) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
+        this.likeRepository = likeRepository;
     }
 
     public CreatePostResponse createPost(CreatePostRequest request, Long loginUserId) {
-        User user = userRepository.findById(loginUserId)
+        User user = userRepository.findUserByUserIdAndDeletedAtIsNull(loginUserId)
                 .orElseThrow(() -> new RuntimeException("게시글 생성 실패 - 회원 없음. "));
 
         Post post = Post.builder()
@@ -48,21 +51,19 @@ public class PostService {
                 .toList();
     }
 
-    public PostDetailResponse postDetail(Long postId) {
-        Post post = postRepository.findById(postId)
+    public PostDetailResponse postDetail(Long loginUserId, Long postId) {
+        Post post = postRepository.findPostByPostIdAndDeletedAtIsNull(postId)
                 .orElseThrow(() -> new RuntimeException("게시글 상세 조회 실패 - 게시글 없음"));
 
-        if (post.getDeletedAt() != null) {
-            throw new RuntimeException("게시글 상세 조회 실패 - 삭제된 게시글");
-        }
+        boolean isLiked = likeRepository.existsPostLikeByUserIdAndPostId(loginUserId, postId);
 
         post.increaseViewCount();
 
-        return new PostDetailResponse(post);
+        return new PostDetailResponse(post, isLiked);
     }
 
     public UpdatePostResponse updatePost(Long postId, UpdatePostRequest request, Long loginUserId) {
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findPostByPostIdAndDeletedAtIsNull(postId)
                 .orElseThrow(() -> new RuntimeException("게시글 수정 불가 - 게시글 없음."));
 
         if (!post.getUser().getUserId().equals(loginUserId)) {
@@ -79,7 +80,7 @@ public class PostService {
     }
 
     public DeletePostResponse deletePost(Long postId, Long loginUserId) {
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findPostByPostIdAndDeletedAtIsNull(postId)
                 .orElseThrow(() -> new RuntimeException("게시글 삭제 불가 - 게시글 없음."));
 
         if (!post.getUser().getUserId().equals(loginUserId)) {

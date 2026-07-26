@@ -62,11 +62,12 @@ public class PostController {
     }
 
     @GetMapping("/{postId}")
-    public ApiResponse<PostDetailResponse> getPostDetail(@PathVariable Long postId) {
+    public ApiResponse<PostDetailResponse> getPostDetail(@PathVariable Long postId, @AuthenticationPrincipal UserDetails loginUser) {
         List<ErrorResponse> errors = new ArrayList<>();
+        Long loginUserId = Long.valueOf(loginUser.getUsername());
 
         try {
-            PostDetailResponse data = postService.postDetail(postId);
+            PostDetailResponse data = postService.postDetail(loginUserId, postId);
             return new ApiResponse<>("post_detail_success", data, null);
         } catch (RuntimeException e) {
             errors.add(new ErrorResponse("post_id", "POST_DETAIL_FAIL", e.getMessage()));

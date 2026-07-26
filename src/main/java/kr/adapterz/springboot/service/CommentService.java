@@ -29,9 +29,9 @@ public class CommentService {
     }
 
     public CreateCommentResponse createComment(Long postId, CreateCommentRequest request, Long loginUserId) {
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findPostByPostIdAndDeletedAtIsNull(postId)
                 .orElseThrow(() -> new RuntimeException("댓글 달기 실패  - 게시글 없음."));
-        User user = userRepository.findById(loginUserId)
+        User user = userRepository.findUserByUserIdAndDeletedAtIsNull(loginUserId)
                 .orElseThrow(() -> new RuntimeException("댓글 달기 실패 - 회원 없음."));
 
         Comment comment = Comment.builder()
@@ -48,7 +48,7 @@ public class CommentService {
     }
 
     public UpdateCommentResponse updateComment(Long commentId, UpdateCommentRequest request, Long loginUserId) {
-        Comment comment = commentRepository.findById(commentId)
+        Comment comment = commentRepository.findCommentByCommentIdAndDeletedAtIsNull(commentId)
                 .orElseThrow(() -> new RuntimeException("댓글 수정 실패 - 댓글 없음."));
 
         if (!comment.getUser().getUserId().equals(loginUserId)) {
@@ -61,7 +61,7 @@ public class CommentService {
     }
 
     public DeleteCommentResponse deleteComment(Long commentId, Long loginUserId) {
-        Comment comment = commentRepository.findById(commentId)
+        Comment comment = commentRepository.findCommentByCommentIdAndDeletedAtIsNull(commentId)
                 .orElseThrow(() -> new RuntimeException("댓글 삭제 실패 - 댓글 없음."));
 
         if (!comment.getUser().getUserId().equals(loginUserId)) {
@@ -76,13 +76,8 @@ public class CommentService {
 
     @Transactional(readOnly = true)
     public List<CommentListResponse> commentList(Long postId) {
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findPostByPostIdAndDeletedAtIsNull(postId)
                 .orElseThrow(() -> new RuntimeException("댓글 목록 조회 실패 - 게시글 없음."));
-
-        if (post.getDeletedAt() != null) {
-            throw new RuntimeException("댓글 목록 조회 실패 - 삭제된 게시글.");
-        }
-
         List<Comment> comments =
                 commentRepository.findByPostAndDeletedAtIsNullOrderByCreatedAtAsc(post);
 

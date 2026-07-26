@@ -25,13 +25,13 @@ public class LikeController {
     @PostMapping
     public ApiResponse<CreateLikeResponse> createLike(
             @PathVariable Long postId,
-            @RequestBody CreateLikeRequest request, @AuthenticationPrincipal UserDetails loginUser) {
+            @AuthenticationPrincipal UserDetails loginUser) {
 
         List<ErrorResponse> errors = new ArrayList<>();
         Long loginUserId = Long.valueOf(loginUser.getUsername());
 
         try {
-            CreateLikeResponse data = likeService.createLike(postId, request, loginUserId);
+            CreateLikeResponse data = likeService.createLike(postId, loginUserId);
             return new ApiResponse<>("like_create_success", data, null);
         } catch (RuntimeException e) {
             errors.add(new ErrorResponse("post_id", "LIKE_CREATE_FAIL", e.getMessage()));

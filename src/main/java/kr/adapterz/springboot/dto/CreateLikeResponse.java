@@ -2,9 +2,11 @@ package kr.adapterz.springboot.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import kr.adapterz.springboot.entity.PostLike;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+@Getter
 public class CreateLikeResponse {
 
     @JsonProperty("like_id")
@@ -19,26 +21,14 @@ public class CreateLikeResponse {
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
 
-    public CreateLikeResponse(PostLike like) {
+    private boolean isLiked;
+
+
+    public CreateLikeResponse(PostLike like, boolean isLiked) {
         this.likeId = like.getLikeId();
         this.postId = like.getPost().getPostId();
         this.userId = like.getUser().getUserId();
         this.createdAt = like.getCreatedAt();
-    }
-
-    public Long getLikeId() {
-        return likeId;
-    }
-
-    public Long getPostId() {
-        return postId;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+        this.isLiked = isLiked;
     }
 }

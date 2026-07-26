@@ -1,6 +1,5 @@
 package kr.adapterz.springboot.service;
 
-import kr.adapterz.springboot.dto.CreateLikeRequest;
 import kr.adapterz.springboot.dto.CreateLikeResponse;
 import kr.adapterz.springboot.dto.DeleteLikeResponse;
 import kr.adapterz.springboot.entity.Post;
@@ -28,11 +27,11 @@ public class LikeService {
         this.userRepository = userRepository;
     }
 
-    public CreateLikeResponse createLike(Long postId, CreateLikeRequest request, Long loginUserId) {
-        Post post = postRepository.findById(postId)
+    public CreateLikeResponse createLike(Long postId, Long loginUserId) {
+        Post post = postRepository.findPostByPostIdAndDeletedAtIsNull(postId)
                 .orElseThrow(() -> new RuntimeException("좋아요 달기 실패 - 게시글 없음."));
 
-        User user = userRepository.findById(loginUserId)
+        User user = userRepository.findUserByUserIdAndDeletedAtIsNull(loginUserId)
                 .orElseThrow(() -> new RuntimeException("좋아요 달기 실패 - 회원 없음."));
 
         if (likeRepository.existsByUserAndPost(user, post)) {
@@ -48,22 +47,23 @@ public class LikeService {
 
         post.increaseLikeCount();
 
-        return new CreateLikeResponse(savedLike);
+        return new CreateLikeResponse(savedLike, true);
     }
 
     public DeleteLikeResponse deleteLike(Long postId, Long loginUserId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("댓글 삭제 실패 - 게시글 없음."));
+        Post post = postRepository.findPostByPostIdAndDeletedAtIsNull(postId)
+                .orElseThrow(() -> new RuntimeException("좋아요 삭제 실패 - 게시글 없음."));
 
-        User user = userRepository.findById(loginUserId)
-                .orElseThrow(() -> new RuntimeException("댓글 삭제 실패 - 회원 없음."));
+        User user = userRepository.findUserByUserIdAndDeletedAtIsNull(loginUserId)
+                .orElseThrow(() -> new RuntimeException("좋아요 삭제 실패 - 회원 없음."));
 
         PostLike like = likeRepository.findByUserAndPost(user, post)
-                .orElseThrow(() -> new RuntimeException("댓글 삭제 실패 - 좋아요 없음."));
+                .orElseThrow(() -> new RuntimeException("좋아요를 누르지 않았습니다."));
 
-        like.softDelete();
+
+        likeRepository.delete(like);
         post.decreaseLikeCount();
 
-        return new DeleteLikeResponse(like);
+        return new DeleteLikeResponse(like, false );
     }
 }
