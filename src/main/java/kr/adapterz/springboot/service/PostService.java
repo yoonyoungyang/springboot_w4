@@ -55,7 +55,7 @@ public class PostService {
         Post post = postRepository.findPostByPostIdAndDeletedAtIsNull(postId)
                 .orElseThrow(() -> new RuntimeException("게시글 상세 조회 실패 - 게시글 없음"));
 
-        boolean isLiked = likeRepository.existsPostLikeByUserIdAndPostId(loginUserId, postId);
+        boolean isLiked = likeRepository.existsByUser_UserIdAndPost_PostId(loginUserId, postId);
 
         post.increaseViewCount();
 
