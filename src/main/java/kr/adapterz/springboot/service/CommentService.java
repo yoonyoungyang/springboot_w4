@@ -75,16 +75,17 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentListResponse> commentList(Long postId, Long loginUserId) {
+    public CommentListResponse commentList(Long postId, Long loginUserId) {
         Post post = postRepository.findPostByPostIdAndDeletedAtIsNull(postId)
                 .orElseThrow(() -> new RuntimeException("댓글 목록 조회 실패 - 게시글 없음."));
         List<Comment> comments =
-                commentRepository.findByPostAndDeletedAtIsNullOrderByCreatedAtAsc(post);
+                commentRepository.findAllWithUserByPost(post);
+        Long totalCount = commentRepository.countByPostAndDeletedAtIsNull(post);
 
-        List<CommentListResponse> responses = comments.stream()
-                .map(comment -> new CommentListResponse(comment, loginUserId))
+        List<CommentResponse> responses = comments.stream()
+                .map(comment -> new CommentResponse(comment, loginUserId))
                 .toList();
 
-        return responses;
+        return new CommentListResponse(responses, totalCount);
     }
 }

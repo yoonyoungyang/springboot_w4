@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-@CrossOrigin(origins = "http://127.0.0.1:5500")
 
 @RestController
 @RequestMapping("/posts/{postId}/comments")
@@ -23,16 +22,14 @@ public class CommentController {
 
 
     @GetMapping
-    public ApiResponse<List<CommentListResponse>> commentList(
+    public ApiResponse<CommentListResponse> commentList(
             @PathVariable Long postId, @AuthenticationPrincipal UserDetails loginUser) {
 
         List<ErrorResponse> errors = new ArrayList<>();
         Long loginUserId = Long.valueOf(loginUser.getUsername());
-
-
-
         try {
-            List<CommentListResponse> data = commentService.commentList(postId, loginUserId);
+            System.out.println("댓글 Controller 진입");
+            CommentListResponse data = commentService.commentList(postId, loginUserId);
             return new ApiResponse<>("comment_list_success", data, null);
         } catch (RuntimeException e) {
             errors.add(new ErrorResponse(

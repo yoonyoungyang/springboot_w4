@@ -35,6 +35,14 @@ public class PostListResponse {
     @JsonProperty("comment_count")
     private int commentCount;
 
+    @JsonProperty("author_nickname")
+    private String authorNickname;
+
+    @JsonProperty("author_profileImg")
+    private String authorProfileImg;
+
+
+
     public PostListResponse(Post post) {
         this.postId = post.getPostId();
         this.title = post.getTitle();
@@ -45,5 +53,7 @@ public class PostListResponse {
         this.viewCount = post.getViewCount();
         this.likeCount = post.getLikeCount();
         this.commentCount = post.getCommentCount();
+        this.authorNickname = post.getUser().getNickname();
+        this.authorProfileImg = post.getUser().getProfileImg();
     }
 }

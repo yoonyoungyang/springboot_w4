@@ -43,7 +43,10 @@ public class PostDetailResponse {
     @JsonProperty("is_liked")
     private boolean isLiked;
 
-    public PostDetailResponse(Post post, boolean isLiked) {
+    @JsonProperty("is_mine")
+    private boolean isMine;
+
+    public PostDetailResponse(Post post, boolean isLiked, Long loginUserId) {
         this.postId = post.getPostId();
         this.title = post.getTitle();
         this.content = post.getContent();
@@ -57,5 +60,7 @@ public class PostDetailResponse {
         this.nickname = post.getUser().getNickname();
         this.profileImg = post.getUser().getProfileImg();
         this.isLiked = isLiked;
+
+        this.isMine = post.getUser().getUserId().equals(loginUserId);
     }
 }

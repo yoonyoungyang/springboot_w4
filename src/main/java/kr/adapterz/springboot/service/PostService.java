@@ -44,9 +44,8 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public List<PostListResponse> postList() {
-        return postRepository.findAll()
+        return postRepository.findAllWithUser()
                 .stream()
-                .filter(post -> post.getDeletedAt() == null)
                 .map(PostListResponse::new)
                 .toList();
     }
@@ -59,7 +58,7 @@ public class PostService {
 
         post.increaseViewCount();
 
-        return new PostDetailResponse(post, isLiked);
+        return new PostDetailResponse(post, isLiked, loginUserId);
     }
 
     public UpdatePostResponse updatePost(Long postId, UpdatePostRequest request, Long loginUserId) {

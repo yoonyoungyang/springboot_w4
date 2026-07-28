@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@CrossOrigin(origins = "http://127.0.0.1:5500")
 
 @RestController
 @RequestMapping("/posts/{postId}/likes")

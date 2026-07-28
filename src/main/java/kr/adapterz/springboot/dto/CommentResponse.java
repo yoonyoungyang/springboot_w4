@@ -7,7 +7,7 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Getter
-public class CommentListResponse {
+public class CommentResponse {
 
     @JsonProperty("comment_id")
     private Long commentId;
@@ -33,7 +33,7 @@ public class CommentListResponse {
 
 
 
-    public CommentListResponse(Comment comment, Long loginUserId) {
+    public CommentResponse(Comment comment, Long loginUserId) {
         this.commentId = comment.getCommentId();
         this.content = comment.getContent();
         this.createdAt = comment.getCreatedAt();
