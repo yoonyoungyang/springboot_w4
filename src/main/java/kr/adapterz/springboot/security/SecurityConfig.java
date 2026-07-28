@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
@@ -28,6 +29,7 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))	//H2 콘솔 설정
                 .authorizeHttpRequests(requests ->
                         requests.requestMatchers(allowedUrls).permitAll()
+                                .requestMatchers(HttpMethod.GET, "/posts").permitAll()
                                 .requestMatchers(PathRequest.toH2Console()).permitAll()	// h2 콘솔은 DB 확인하기 위해 허용함
                                 .anyRequest().authenticated()	// 그 외의 모든 요청은 인증 필요
                 )

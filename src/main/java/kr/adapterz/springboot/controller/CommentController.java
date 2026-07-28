@@ -24,12 +24,15 @@ public class CommentController {
 
     @GetMapping
     public ApiResponse<List<CommentListResponse>> commentList(
-            @PathVariable Long postId) {
+            @PathVariable Long postId, @AuthenticationPrincipal UserDetails loginUser) {
 
         List<ErrorResponse> errors = new ArrayList<>();
+        Long loginUserId = Long.valueOf(loginUser.getUsername());
+
+
 
         try {
-            List<CommentListResponse> data = commentService.commentList(postId);
+            List<CommentListResponse> data = commentService.commentList(postId, loginUserId);
             return new ApiResponse<>("comment_list_success", data, null);
         } catch (RuntimeException e) {
             errors.add(new ErrorResponse(

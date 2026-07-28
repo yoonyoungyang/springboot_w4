@@ -28,7 +28,10 @@ public class CommentListResponse {
     @JsonProperty("profile_img")
     private String profileImg;
 
-    public CommentListResponse(Comment comment) {
+    @JsonProperty("is_mine")
+    private boolean isMine;
+
+    public CommentListResponse(Comment comment, Long loginUserId ) {
         this.commentId = comment.getCommentId();
         this.content = comment.getContent();
         this.createdAt = comment.getCreatedAt();
@@ -36,5 +39,8 @@ public class CommentListResponse {
         this.userId = comment.getUser().getUserId();
         this.nickname = comment.getUser().getNickname();
         this.profileImg = comment.getUser().getProfileImg();
+
+        this.isMine = comment.getUser().getUserId().equals(loginUserId);
+
     }
 }
