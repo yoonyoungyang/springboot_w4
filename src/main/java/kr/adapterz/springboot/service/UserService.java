@@ -1,27 +1,34 @@
 package kr.adapterz.springboot.service;
 
 import kr.adapterz.springboot.dto.*;
+import kr.adapterz.springboot.entity.Comment;
+import kr.adapterz.springboot.entity.Post;
 import kr.adapterz.springboot.entity.User;
+import kr.adapterz.springboot.repository.CommentRepository;
+import kr.adapterz.springboot.repository.PostRepository;
 import kr.adapterz.springboot.repository.UserRepository;
 import kr.adapterz.springboot.security.TokenProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Objects;
+
 @Service
 @Transactional
+@RequiredArgsConstructor
+
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
+    private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, TokenProvider tokenProvider) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.tokenProvider = tokenProvider;
-    }
 
     @Transactional(readOnly = true)
     public boolean existsByEmail(String email) {
@@ -61,10 +68,10 @@ public class UserService {
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmailAndDeletedAtIsNull(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("로그인 실패 - 사용자 정보 찾을 수 없음."));
+                .orElseThrow(() -> new RuntimeException("회원 안 찾아짐."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("로그인 실패 - 사용자 정보 찾을 수 없음.");
+            throw new RuntimeException("비밀번호 다름.");
         }
         String token = tokenProvider.createToken(String.format("%s:%s", user.getUserId(), user.getRole()));
 
@@ -72,22 +79,24 @@ public class UserService {
     }
 
     public UserInfoResponse getUser(Long loginUserId) {
-        User user = userRepository.findById(loginUserId)
+        User user = userRepository.findUserByUserIdAndDeletedAtIsNull(loginUserId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
         return new UserInfoResponse(user);
     }
 
     @PreAuthorize("hasRole('USER')")
     public UpdateUserResponse updateUser(UpdateUserRequest request, Long loginUserId) {
-        User user = userRepository.findById(loginUserId)
+        User user = userRepository.findUserByUserIdAndDeletedAtIsNull(loginUserId)
                 .orElseThrow(() -> new RuntimeException("회원 정보 수정 실패 - 회원 없음."));
         if(request.getNickname()==null && request.getProfileImg()==null) {
             throw new RuntimeException("회원 정보 수정 실패 - 변경 사항 없음");
-        }else if(user.getNickname()== request.getNickname() && user.getProfileImg() ==request.getProfileImg()){
+        }else if(Objects.equals(user.getNickname(), request.getNickname()) && Objects.equals(user.getProfileImg(),request.getProfileImg())) {
             throw new RuntimeException("회원 정보 수정 실패 - 변경 사항 없음");
         }
-        if(request.getProfileImg()==null && request.getNickname().isBlank()){
-            throw new RuntimeException("회원 정보 수정 실패 - 닉네임이 비어 있음.");
+        if (request.getNickname() != null && request.getNickname().isBlank()) {
+            throw new RuntimeException(
+                    "회원 정보 수정 실패 - 닉네임이 비어 있음."
+            );
         }
         if (request.getNickname() != null
                 && userRepository.existsByNicknameAndDeletedAtIsNull(request.getNickname())
@@ -107,7 +116,7 @@ public class UserService {
     @PreAuthorize("hasRole('USER')")
     public UpdatePasswordResponse updatePassword(UpdatePasswordRequest request, Long loginUserId) {
 
-        User user = userRepository.findById(loginUserId)
+        User user = userRepository.findUserByUserIdAndDeletedAtIsNull(loginUserId)
                 .orElseThrow(() -> new RuntimeException("비밀번호 변경 실패 - 회원 없음."));
 
 
@@ -133,24 +142,34 @@ public class UserService {
             throw new RuntimeException("비밀번호 변경 실패 - 비밀번호 형식이 올바르지 않음.");
         }
 
+
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new RuntimeException("비밀번호 변경 실패 - 현재 비밀번호 일치하지 않음.");
         }
+        String encodedNewPassword = passwordEncoder.encode(request.getNewPassword());
 
-        user.updatePassword(request.getNewPassword());
+
+        user.updatePassword(encodedNewPassword);
 
         return new UpdatePasswordResponse(user);
     }
 
+    @Transactional
     @PreAuthorize("hasRole('USER')")
     public DeleteUserResponse deleteUser(Long loginUserId) {
 
-        User user = userRepository.findById(loginUserId)
+        User user = userRepository.findUserByUserIdAndDeletedAtIsNull(loginUserId)
                 .orElseThrow(() -> new RuntimeException("회원 탈퇴 실패 - 회원 없음."));
 
 //        if(!passwordEncoder.matches(password, user.getPassword())) {
 //            throw new RuntimeException("회원 탈퇴 실패 - 비밀번호 다름.");
 //        }
+
+        List<Post> posts = postRepository.findAllByUser_UserIdAndDeletedAtIsNull(loginUserId);
+        List<Comment> comments = commentRepository.findAllByUser_UserIdAndDeletedAtIsNull(loginUserId);
+
+        posts.forEach(Post::softDelete);
+        comments.forEach(Comment::softDelete);
 
         user.softDelete();
 

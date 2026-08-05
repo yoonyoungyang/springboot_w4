@@ -17,16 +17,11 @@ public class DeleteLikeResponse {
     @JsonProperty("like_id")
     private Long likeId;
 
-    @JsonProperty("deleted_at")
-    private LocalDateTime deletedAt;
-
     private boolean isLiked;
 
     public DeleteLikeResponse(PostLike like, boolean isLiked) {
+        this.postId = like.getPost().getPostId();
         this.likeId = like.getLikeId();
-
-        this.deletedAt = like.getDeletedAt();
-
         this.isLiked = isLiked;
 
     }

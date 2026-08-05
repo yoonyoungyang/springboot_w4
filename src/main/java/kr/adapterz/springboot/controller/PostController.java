@@ -106,13 +106,7 @@ public class PostController {
 
         List<ErrorResponse> errors = new ArrayList<>();
         Long loginUserId = Long.valueOf(loginUser.getUsername());
-
-        try {
-            DeletePostResponse data = postService.deletePost(postId, loginUserId);
+         DeletePostResponse data = postService.deletePost(postId, loginUserId);
             return new ApiResponse<>("post_delete_success", data, null);
-        } catch (RuntimeException e) {
-            errors.add(new ErrorResponse("post_id", "POST_DELETE_FAIL", e.getMessage()));
-            return new ApiResponse<>("post_delete_fail", null, errors);
-        }
     }
 }

@@ -1,6 +1,7 @@
 package kr.adapterz.springboot.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,8 +27,13 @@ import java.util.List;
 @RequiredArgsConstructor
 @Configuration
 public class SecurityConfig {
+
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final String[] allowedUrls = {"/", "/users/signup", "/users/login"};
+    private final String[] allowedUrls = {"/", "/users/signup", "/users/login", "/ws"};
+
+    @Value("${cors.allowed-origins}")
+    private List<String> allowedOrigins;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -60,7 +66,8 @@ public class SecurityConfig {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
 
-        corsConfiguration.setAllowedOrigins(List.of("http://127.0.0.1:5500", "http://localhost:5500"));
+
+        corsConfiguration.setAllowedOrigins(allowedOrigins);
         corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS"));
         corsConfiguration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 

@@ -2,10 +2,13 @@ package kr.adapterz.springboot.security;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.security.Key;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -14,23 +17,23 @@ import java.util.Date;
 
 @Service
 public class TokenProvider {
-    private final String secretKey;
+    private final Key key;
     private final long expirationHours;
     private final String issuer;
 
     public TokenProvider(
-            @Value("${secretKey}") String secretKey,
-    @Value("${expiration-hours}") long expirationHours,
-    @Value("${issuer}") String issuer
+            @Value("${jwt.secret-key}") String secretKey,
+    @Value("${jwt.expirationHours}") long expirationHours,
+    @Value("${jwt.issuer}") String issuer
     ) {
-        this.secretKey = secretKey;
+        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
         this.expirationHours = expirationHours;
         this.issuer = issuer;
     }
 
     public String createToken(String userSpecification) {
         return Jwts.builder()
-                .signWith(new SecretKeySpec(secretKey.getBytes(), SignatureAlgorithm.HS512.getJcaName()))   // HS512 알고리즘을 사용하여 secretKey를 이용해 서명
+                .signWith(key)   // HS512 알고리즘을 사용하여 key를 이용해 서명
                 .setSubject(userSpecification)  // JWT 토큰이 나타내는 사용자 식별 정보
                 .setIssuer(issuer)  // JWT 토큰 발급자
                 .setIssuedAt(Timestamp.valueOf(LocalDateTime.now()))    // JWT 토큰 발급 시간
@@ -38,6 +41,6 @@ public class TokenProvider {
                 .compact(); // JWT 토큰 생성
     }
     public String validateTokenAndGetSubject(String token) {
-        return Jwts.parserBuilder().setSigningKey(secretKey.getBytes()).build().parseClaimsJws(token).getBody().getSubject();
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getSubject();
     }
 }

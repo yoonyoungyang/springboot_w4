@@ -30,12 +30,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = parseBearerToken(request);
-        User user = parseUserSpecification(token);
-        AbstractAuthenticationToken authenticated = UsernamePasswordAuthenticationToken.authenticated(user, token, user.getAuthorities());
-        authenticated.setDetails(new WebAuthenticationDetails(request));
-        SecurityContextHolder.getContext().setAuthentication(authenticated);
-
+        if (token != null) {
+            User user = parseUserSpecification(token);
+            AbstractAuthenticationToken authenticated = UsernamePasswordAuthenticationToken.authenticated(user, token, user.getAuthorities());
+            authenticated.setDetails(new WebAuthenticationDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authenticated);
+        }
         filterChain.doFilter(request, response);
+
     }
 
     private String parseBearerToken(HttpServletRequest request) {
@@ -48,11 +50,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private User parseUserSpecification(String token) {
-        String[] split = Optional.ofNullable(token)
-                .filter(subject -> subject.length() >= 10)
-                .map(tokenProvider::validateTokenAndGetSubject)
-                .orElse("anonymous:anonymous")
-                .split(":");
+        String subject = tokenProvider.validateTokenAndGetSubject(token);
+        String[] split = subject.split(":");
 
         return new User(split[0], "",List.of(new SimpleGrantedAuthority("ROLE_" + split[1])));
     }

@@ -1,7 +1,11 @@
 package kr.adapterz.springboot;
 
 import kr.adapterz.springboot.dto.*;
+import kr.adapterz.springboot.entity.Comment;
+import kr.adapterz.springboot.entity.Post;
 import kr.adapterz.springboot.entity.User;
+import kr.adapterz.springboot.repository.CommentRepository;
+import kr.adapterz.springboot.repository.PostRepository;
 import kr.adapterz.springboot.repository.UserRepository;
 import kr.adapterz.springboot.security.TokenProvider;
 import kr.adapterz.springboot.service.UserService;
@@ -15,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -28,6 +33,12 @@ import static org.mockito.Mockito.verify;
 public class UserServiceTest {
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PostRepository postRepository;
+
+    @Mock
+    private CommentRepository commentRepository;
 
     @InjectMocks
     private UserService userService;
@@ -49,8 +60,16 @@ public class UserServiceTest {
                 .profileImg("profile.png")
                 .build();
 
+        User savedUser = User.builder()
+                .email("test@email.com")
+                .password("Password1!")
+                .nickname("테스트닉네임")
+                .profileImg("profile.png")
+                .build();
+
         given(userRepository.existsByEmail(request.getEmail())).willReturn(false);
         given(passwordEncoder.encode(request.getPassword())).willReturn("encodedPassword");
+        given(userRepository.save(any(User.class))).willReturn(savedUser);
         //when
         SignUpResponse response = userService.signup(request);
         //then
@@ -105,6 +124,15 @@ public class UserServiceTest {
                 .profileImg("profile.png")
                 .build();
 
+        User signupUser = User.builder()
+                .email("test@email.com")
+                .password("Password1!")
+                .nickname("테스트닉네임")
+                .profileImg("profile.png")
+                .build();
+
+
+        given(userRepository.save(any(User.class))).willReturn(signupUser);
         given(userRepository.existsByEmail(request.getEmail())).willReturn(false);
         given(userRepository.existsByNicknameAndDeletedAtIsNull(request.getNickname())).willReturn(false);
         given(passwordEncoder.encode(request.getPassword())).willReturn("encodedPassword");
@@ -200,17 +228,19 @@ public class UserServiceTest {
                 .email("test@email.com")
                 .password("encodedPassword")
                 .nickname("테스트닉네임")
+                .profileImg("url")
                 .build();
+
+
         //given
         ReflectionTestUtils.setField(user, "userId", 1L);
-        given(userRepository.findByEmailAndDeletedAtIsNull(user.getEmail())).willReturn(Optional.of(user));
+        given(userRepository.findUserByUserIdAndDeletedAtIsNull(user.getUserId())).willReturn(Optional.of(user));
         //when
         UserInfoResponse response = userService.getUser(user.getUserId());
         //then
-        verify(userRepository).save(any(User.class));
         assertThat(response.getEmail()).isEqualTo(user.getEmail());
         assertThat(response.getNickname()).isEqualTo(user.getNickname());
-        assertThat(response.getProfileImg()).isEqualTo(user.getPassword());
+        assertThat(response.getProfileImg()).isEqualTo(user.getProfileImg());
     }
 
     @Test
@@ -223,7 +253,7 @@ public class UserServiceTest {
                 .build();
         //given
         ReflectionTestUtils.setField(user, "userId", 1L);
-        given(userRepository.findByEmailAndDeletedAtIsNull(user.getEmail())).willReturn(Optional.empty());
+        given(userRepository.findUserByUserIdAndDeletedAtIsNull(user.getUserId())).willReturn(Optional.empty());
         //when&then
         assertThatThrownBy(() -> userService.getUser(user.getUserId())).isInstanceOf(RuntimeException.class).hasMessage("존재하지 않는 사용자입니다.");
         verify(userRepository, never()).save(any(User.class));
@@ -241,12 +271,12 @@ public class UserServiceTest {
                 .build();
         //given
         ReflectionTestUtils.setField(user, "userId", 1L);
-        given(userRepository.findById(user.getUserId())).willReturn(Optional.of(user));
+        given(userRepository.findUserByUserIdAndDeletedAtIsNull(user.getUserId())).willReturn(Optional.of(user));
         given(userRepository.existsByNicknameAndDeletedAtIsNull(request.getNickname())).willReturn(false);
         //when
         UpdateUserResponse response = userService.updateUser(request, user.getUserId());
         //then
-        verify(userRepository).findById(user.getUserId());
+        verify(userRepository).findUserByUserIdAndDeletedAtIsNull(user.getUserId());
         verify(userRepository).existsByNicknameAndDeletedAtIsNull(request.getNickname());
         assertThat(response.getNickname()).isEqualTo(request.getNickname());
         assertThat(response.getProfileImg()).isEqualTo(request.getProfileImg());
@@ -266,10 +296,10 @@ public class UserServiceTest {
                 .build();
         //given
         ReflectionTestUtils.setField(user, "userId", 1L);
-        given(userRepository.findById(user.getUserId())).willReturn(Optional.empty());
+        given(userRepository.findUserByUserIdAndDeletedAtIsNull(user.getUserId())).willReturn(Optional.empty());
         //when&then
         assertThatThrownBy(() -> userService.updateUser(request, user.getUserId())).isInstanceOf(RuntimeException.class).hasMessage("회원 정보 수정 실패 - 회원 없음.");
-        verify(userRepository).findById(user.getUserId());
+        verify(userRepository).findUserByUserIdAndDeletedAtIsNull(user.getUserId());
         verify(userRepository, never()).existsByNicknameAndDeletedAtIsNull(request.getNickname());
     }
     @Test
@@ -285,10 +315,10 @@ public class UserServiceTest {
                 .build();
         //given
         ReflectionTestUtils.setField(user, "userId", 1L);
-        given(userRepository.findById(user.getUserId())).willReturn(Optional.of(user));
+        given(userRepository.findUserByUserIdAndDeletedAtIsNull(user.getUserId())).willReturn(Optional.of(user));
         //when&then
-        assertThatThrownBy(() -> userService.updateUser(request, user.getUserId())).isInstanceOf(RuntimeException.class).hasMessage("회원 정보 수정 실패 - 변경 사항 없음.");
-        verify(userRepository).findById(user.getUserId());
+        assertThatThrownBy(() -> userService.updateUser(request, user.getUserId())).isInstanceOf(RuntimeException.class).hasMessage("회원 정보 수정 실패 - 변경 사항 없음");
+        verify(userRepository).findUserByUserIdAndDeletedAtIsNull(user.getUserId());
         assertThat(user.getNickname()).isEqualTo("테스트닉네임");
         assertThat(user.getProfileImg()).isEqualTo("url");
 
@@ -297,7 +327,7 @@ public class UserServiceTest {
     @Test
     @DisplayName("회원 정보 수정 실패 테스트 - 닉네임 비어 있음")
     void updateUserFail_ifNicknameBlank() {
-        UpdateUserRequest request = UpdateUserRequest.builder().nickname("  ").profileImg("url").build();
+        UpdateUserRequest request = UpdateUserRequest.builder().nickname("  ").profileImg(null).build();
 
         User user = User.builder()
                 .email("test@email.com")
@@ -306,15 +336,14 @@ public class UserServiceTest {
                 .build();
         //given
         ReflectionTestUtils.setField(user, "userId", 1L);
-        given(userRepository.findById(user.getUserId())).willReturn(Optional.of(user));
+        given(userRepository.findUserByUserIdAndDeletedAtIsNull(user.getUserId())).willReturn(Optional.of(user));
 
         //when&then
         assertThatThrownBy(() -> userService.updateUser(request, user.getUserId())).isInstanceOf(RuntimeException.class).hasMessage("회원 정보 수정 실패 - 닉네임이 비어 있음.");
         verify(userRepository, never()).save(any(User.class));
-        verify(userRepository).findById(user.getUserId());
+        verify(userRepository).findUserByUserIdAndDeletedAtIsNull(user.getUserId());
         verify(userRepository, never()).existsByNicknameAndDeletedAtIsNull(any());
         assertThat(user.getNickname()).isEqualTo("테스트닉네임");
-        assertThat(user.getProfileImg()).isEqualTo("url");
     }
 
     @Test
@@ -326,13 +355,14 @@ public class UserServiceTest {
                 .email("test@email.com")
                 .password("encodedPassword")
                 .nickname("테스트닉네임")
+                .profileImg("url")
                 .build();
         //given
         ReflectionTestUtils.setField(user, "userId", 1L);
-        given(userRepository.findById(user.getUserId())).willReturn(Optional.of(user));
+        given(userRepository.findUserByUserIdAndDeletedAtIsNull(user.getUserId())).willReturn(Optional.of(user));
         given(userRepository.existsByNicknameAndDeletedAtIsNull(request.getNickname())).willReturn(true);
         //when&then
-        assertThatThrownBy(() -> userService.updateUser(request, user.getUserId())).isInstanceOf(RuntimeException.class).hasMessage("회원 정보 수정 실패 - 닉네임 중복. ");
+        assertThatThrownBy(() -> userService.updateUser(request, user.getUserId())).isInstanceOf(RuntimeException.class).hasMessage("회원 정보 수정 실패 - 닉네임 중복.");
         verify(userRepository, never()).save(any(User.class));
         verify(userRepository).existsByNicknameAndDeletedAtIsNull(request.getNickname());
         assertThat(user.getNickname()).isEqualTo("테스트닉네임");
@@ -340,7 +370,7 @@ public class UserServiceTest {
     }
 
     @Test
-    @DisplayName("비밀번호 수정 성공 테스트")
+    @DisplayName("비밀번호 변경 성공 테스트")
     void updatePasswordSuccess() {
         // given
         UpdatePasswordRequest request = UpdatePasswordRequest.builder()
@@ -356,7 +386,7 @@ public class UserServiceTest {
 
         ReflectionTestUtils.setField(user, "userId", 1L);
 
-        given(userRepository.findById(user.getUserId())).willReturn(Optional.of(user));
+        given(userRepository.findUserByUserIdAndDeletedAtIsNull(user.getUserId())).willReturn(Optional.of(user));
         given(passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())).willReturn(true);
         given(passwordEncoder.encode(request.getNewPassword())).willReturn("encodedNewPassword");
 
@@ -364,14 +394,14 @@ public class UserServiceTest {
         UpdatePasswordResponse response = userService.updatePassword(request, user.getUserId());
 
         // then
-        verify(userRepository).findById(user.getUserId());
+        verify(userRepository).findUserByUserIdAndDeletedAtIsNull(user.getUserId());
         verify(passwordEncoder).matches(request.getCurrentPassword(), "encodedOldPassword");
         verify(passwordEncoder).encode(request.getNewPassword());
         assertThat(user.getPassword()).isEqualTo("encodedNewPassword");
     }
 
     @Test
-    @DisplayName("비밀번호 수정 실패 테스트 - 회원 없음")
+    @DisplayName("비밀번호 변경 실패 테스트 - 회원 없음")
     void updatePasswordFail_ifUserNotFound() {
         // given
 
@@ -387,11 +417,11 @@ public class UserServiceTest {
 
         ReflectionTestUtils.setField(user, "userId", 1L);
 
-        given(userRepository.findById(user.getUserId())).willReturn(Optional.empty());
+        given(userRepository.findUserByUserIdAndDeletedAtIsNull(user.getUserId())).willReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> userService.updatePassword(request, user.getUserId())).isInstanceOf(RuntimeException.class).hasMessage("비밀번호 수정 실패 - 회원 없음.");
-        verify(userRepository).findById(user.getUserId());
+        assertThatThrownBy(() -> userService.updatePassword(request, user.getUserId())).isInstanceOf(RuntimeException.class).hasMessage("비밀번호 변경 실패 - 회원 없음.");
+        verify(userRepository).findUserByUserIdAndDeletedAtIsNull(user.getUserId());
         verify(passwordEncoder, never()).matches(any(), any());
         verify(passwordEncoder, never()).encode(any());
     }
@@ -408,17 +438,43 @@ public class UserServiceTest {
                 .profileImg("profile.png")
                 .build();
 
+
         ReflectionTestUtils.setField(user, "userId", 1L);
 
-        given(userRepository.findById(user.getUserId())).willReturn(Optional.of(user));
+        Post post = Post.builder()
+                .user(user)
+                .title("테스트 게시글")
+                .content("테스트 게시글 내용")
+                .contentImg(null)
+                .build();
+
+        ReflectionTestUtils.setField(post, "postId", 1L);
+
+        Comment comment = Comment.builder()
+                .post(post)
+                .user(user)
+                .content("테스트 댓글")
+                .build();
+
+        ReflectionTestUtils.setField(comment, "commentId", 1L);
+
+                given(userRepository.findUserByUserIdAndDeletedAtIsNull(user.getUserId())).willReturn(Optional.of(user));
+        given(postRepository.findAllByUser_UserIdAndDeletedAtIsNull(user.getUserId()))
+                .willReturn(List.of(post));
+
+        given(commentRepository.findAllByUser_UserIdAndDeletedAtIsNull(user.getUserId()))
+                .willReturn(List.of(comment));
 
         // when
         userService.deleteUser(user.getUserId());
 
         // then
-        verify(userRepository).findById(user.getUserId());
-
+        verify(userRepository).findUserByUserIdAndDeletedAtIsNull(user.getUserId());
         assertThat(user.getDeletedAt()).isNotNull();
+        assertThat(post.getDeletedAt()).isNotNull();
+        assertThat(comment.getDeletedAt()).isNotNull();
+
+
     }
     @Test
     @DisplayName("회원 탈퇴 실패 테스트 - 회원 없음")
@@ -426,11 +482,25 @@ public class UserServiceTest {
         // given
         Long loginUserId = 1L;
 
-        given(userRepository.findById(loginUserId)).willReturn(Optional.empty());
+        User user = User.builder()
+                .email("test@email.com")
+                .password("encodedPassword")
+                .nickname("테스트닉네임")
+                .profileImg("profile.png")
+                .build();
+
+
+        given(userRepository.findUserByUserIdAndDeletedAtIsNull(loginUserId)).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> userService.deleteUser(loginUserId)).isInstanceOf(RuntimeException.class).hasMessage("회원 탈퇴 실패 - 회원 없음.");
-        verify(userRepository).findById(loginUserId);
+        verify(userRepository).findUserByUserIdAndDeletedAtIsNull(loginUserId);
+        verify(postRepository, never())
+                .findAllByUser_UserIdAndDeletedAtIsNull(any());
+
+        verify(commentRepository, never())
+                .findAllByUser_UserIdAndDeletedAtIsNull(any());
+
     }
 
 }

@@ -3,6 +3,7 @@ package kr.adapterz.springboot.service;
 import kr.adapterz.springboot.dto.*;
 import kr.adapterz.springboot.entity.Post;
 import kr.adapterz.springboot.entity.User;
+import kr.adapterz.springboot.exception.PostNotFoundException;
 import kr.adapterz.springboot.repository.LikeRepository;
 import kr.adapterz.springboot.repository.PostRepository;
 import kr.adapterz.springboot.repository.UserRepository;
@@ -80,7 +81,7 @@ public class PostService {
 
     public DeletePostResponse deletePost(Long postId, Long loginUserId) {
         Post post = postRepository.findPostByPostIdAndDeletedAtIsNull(postId)
-                .orElseThrow(() -> new RuntimeException("게시글 삭제 불가 - 게시글 없음."));
+                .orElseThrow(PostNotFoundException::new);
 
         if (!post.getUser().getUserId().equals(loginUserId)) {
             throw new RuntimeException("게시글 삭제 불가 - 게시글 삭제 권한이 없음.");

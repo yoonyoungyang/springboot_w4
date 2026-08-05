@@ -35,10 +35,10 @@ public class PostListResponse {
     @JsonProperty("comment_count")
     private int commentCount;
 
-    @JsonProperty("author_nickname")
+    @JsonProperty("nickname")
     private String authorNickname;
 
-    @JsonProperty("author_profileImg")
+    @JsonProperty("profile_img")
     private String authorProfileImg;
 
 

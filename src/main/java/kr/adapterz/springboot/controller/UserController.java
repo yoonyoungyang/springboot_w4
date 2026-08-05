@@ -100,6 +100,8 @@ public class UserController {
             LoginResponse data = userService.login(request);
             return new ApiResponse<>("login_success", data, null);
         } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+
             errors.add(new ErrorResponse("login", "LOGIN_FAILED", "이메일 또는 비밀번호가 일치하지 않습니다."));
             return new ApiResponse<>("login_failed", null, errors);
         }

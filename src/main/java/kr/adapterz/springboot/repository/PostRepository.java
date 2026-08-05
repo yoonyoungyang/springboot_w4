@@ -13,4 +13,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query("select p from Post p join fetch p.user where p.deletedAt is null order by p.createdAt desc")
     List<Post> findAllWithUser();
+
+    List<Post> findAllByUser_UserIdAndDeletedAtIsNull(Long userId);
+
 }
