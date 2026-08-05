@@ -23,6 +23,4 @@ public class ChatMessageResponse {
         this.content = chatMessage.getContent();
         this.sendAt = chatMessage.getCreatedAt();
     }
-
-
 }
