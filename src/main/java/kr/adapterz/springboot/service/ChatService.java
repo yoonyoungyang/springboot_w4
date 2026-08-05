@@ -1,6 +1,7 @@
 package kr.adapterz.springboot.service;
 
-import kr.adapterz.springboot.dto.ErrorResponse;
+import kr.adapterz.springboot.dto.PostListResponse;
+import kr.adapterz.springboot.dto.chat.ChatListResponse;
 import kr.adapterz.springboot.dto.chat.ChatMessageRequest;
 import kr.adapterz.springboot.dto.chat.ChatMessageResponse;
 import kr.adapterz.springboot.entity.ChatMessage;
@@ -12,6 +13,8 @@ import kr.adapterz.springboot.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 
 @Service
@@ -47,6 +50,17 @@ public class ChatService {
 
 
 
+    }
+    public List<ChatListResponse> chatList(Long roomId) {
+        boolean isChatRoomExists = chatRoomRepository.existsById(roomId);
+        if (!isChatRoomExists) {
+            throw new RuntimeException("채팅방이 없습니다.");
+        }
+        List<ChatMessage> chatMessages = chatMessageRepository.findAllByChatRoom_RoomId(roomId);
+        return chatMessages
+                .stream()
+                .map(ChatListResponse::new)
+                .toList();
     }
 
 }

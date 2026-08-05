@@ -1,5 +1,7 @@
 package kr.adapterz.springboot.controller;
 
+import kr.adapterz.springboot.common.ApiResponse;
+import kr.adapterz.springboot.dto.chat.ChatListResponse;
 import kr.adapterz.springboot.dto.chat.ChatMessageRequest;
 import kr.adapterz.springboot.dto.chat.ChatMessageResponse;
 import kr.adapterz.springboot.service.ChatService;
@@ -7,8 +9,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.security.Principal;
+import java.util.List;
 
 
 @RequiredArgsConstructor
@@ -40,6 +46,13 @@ public class ChatController {
         messagingTemplate.convertAndSend("/topic/chat/" + request.getRoomId(), data);
         System.out.println("받은 roomId: " + request.getRoomId());
         System.out.println("전송 주소: /topic/chat/" + request.getRoomId());
+    }
+
+    @ResponseBody
+    @GetMapping("/chat-rooms/{roomId}/messages")
+    public ApiResponse<List<ChatListResponse>> messageList(@PathVariable Long roomId) {
+        List<ChatListResponse> data = chatService.chatList(roomId);
+        return new ApiResponse<>("chat_list_success", data, null);
     }
 
 }

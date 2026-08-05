@@ -6,16 +6,18 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Getter
-public class chatListResponse {
-    private Long meesageId;
+public class ChatListResponse {
+    private Long messageId;
     private String senderNickname;
+    private Long senderId;
     private String content;
     private LocalDateTime sendAt;
     private Long roomId;
 
-    public chatListResponse(ChatMessage chatMessage){
-        this.meesageId = chatMessage.getMessageId();
+    public ChatListResponse(ChatMessage chatMessage){
+        this.messageId = chatMessage.getMessageId();
         this.senderNickname = chatMessage.getSender().getNickname();
+        this.senderId = chatMessage.getSender().getUserId();
         this.content = chatMessage.getContent();
         this.sendAt = chatMessage.getCreatedAt();
         this.roomId = chatMessage.getChatRoom().getRoomId();
