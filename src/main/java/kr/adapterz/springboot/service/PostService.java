@@ -36,6 +36,9 @@ public class PostService {
                 .title(request.getTitle())
                 .content(request.getContent())
                 .contentImg(request.getContentImg())
+                .cinema(request.getCinema())
+                .movieName(request.getMovieName())
+                .postType(request.getPostType())
                 .build();
 
         Post savedPost = postRepository.save(post);
@@ -73,7 +76,10 @@ public class PostService {
         post.updatePost(
                 request.getTitle(),
                 request.getContent(),
-                request.getContentImg()
+                request.getContentImg(),
+                request.getCinema(),
+                request.getMovieName(),
+                request.getPostType()
         );
 
         return new UpdatePostResponse(post);

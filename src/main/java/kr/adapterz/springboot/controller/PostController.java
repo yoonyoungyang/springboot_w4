@@ -41,6 +41,18 @@ public class PostController {
             errors.add(new ErrorResponse("content", "CONTENT_NONE", "내용이 비어있습니다."));
         }
 
+        if (request.getCinema() == null) {
+            errors.add(new ErrorResponse("cinema", "CINEMA_NONE", "상영관이 비어있습니다."));
+        }
+
+        if (request.getMovieName() == null || request.getMovieName().isBlank()) {
+            errors.add(new ErrorResponse("movie_name", "MOVIE_NAME_NONE", "영화명이 비어있습니다."));
+        }
+
+        if (request.getPostType() == null) {
+            errors.add(new ErrorResponse("post_type", "POST_TYPE_NONE", "게시글 유형이 비어있습니다."));
+        }
+
         if (!errors.isEmpty()) {
             return new ApiResponse<>("post_validation_error", null, errors);
         }

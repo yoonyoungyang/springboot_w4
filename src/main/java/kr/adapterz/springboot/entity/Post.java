@@ -29,6 +29,17 @@ public class Post extends BaseEntity {
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "cinema")
+    private Cinema cinema;
+
+    @Column(name = "movie_name")
+    private String movieName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "post_type")
+    private PostType postType;
+
     @Column(name = "content_img")
     private String contentImg;
 
@@ -42,14 +53,19 @@ public class Post extends BaseEntity {
     private int viewCount = 0;
 
     @Builder
-    private Post(User user, String title, String content, String contentImg) {
+    private Post(User user, String title, String content, String contentImg,
+                 Cinema cinema, String movieName, PostType postType) {
         this.user = user;
         this.title = title;
         this.content = content;
         this.contentImg = contentImg;
+        this.cinema = cinema;
+        this.movieName = movieName;
+        this.postType = postType;
     }
 
-    public void updatePost(String title, String content, String contentImg) {
+    public void updatePost(String title, String content, String contentImg,
+                           Cinema cinema, String movieName, PostType postType) {
         if (title != null) {
             this.title = title;
         }
@@ -60,6 +76,18 @@ public class Post extends BaseEntity {
 
         if (contentImg != null) {
             this.contentImg = contentImg;
+        }
+
+        if (cinema != null) {
+            this.cinema = cinema;
+        }
+
+        if (movieName != null) {
+            this.movieName = movieName;
+        }
+
+        if (postType != null) {
+            this.postType = postType;
         }
     }
 
