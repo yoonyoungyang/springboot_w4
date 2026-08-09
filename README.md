@@ -32,6 +32,7 @@ Spring Boot를 기반으로 REST API를 설계하고, **Spring Security + JWT �
 - Docker
 - Docker Compose
 - Nginx
+- Github Actions
 
 ---
 
@@ -282,6 +283,22 @@ Nginx
 JWT_SECRET_KEY
 CORS_ALLOWED_ORIGINS
 ```
+
+### CI/CD 자동 배포
+
+GitHub Actions를 이용해 `main` 브랜치에 코드가 push되면 EC2 서버에 자동으로 배포되도록 구성했습니다.
+
+main branch push
+→ GitHub Actions 실행
+→ EC2 SSH 접속
+→ Backend / Frontend 최신 코드 pull
+→ Docker Compose 재빌드 및 실행
+
+배포에 필요한 EC2 접속 정보와 SSH Private Key는 GitHub Actions Secrets로 관리하여 민감한 정보가 소스 코드에 노출되지 않도록 했습니다.
+
+EC2에서는 최신 코드를 반영한 뒤 `docker compose down`과 `docker compose up -d --build`를 실행해 컨테이너를 다시 빌드하고 실행합니다.
+
+이를 통해 서버에 직접 접속해 수동으로 배포하지 않고, `main` 브랜치에 변경사항이 반영되면 최신 버전이 자동으로 배포되도록 구성했습니다.
 
 ---
 
