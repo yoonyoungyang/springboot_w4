@@ -21,6 +21,5 @@ public class ChatListResponse {
         this.content = chatMessage.getContent();
         this.sendAt = chatMessage.getCreatedAt();
         this.roomId = chatMessage.getChatRoom().getRoomId();
-
     }
 }

@@ -68,10 +68,10 @@ public class UserService {
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmailAndDeletedAtIsNull(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("회원 안 찾아짐."));
+                .orElseThrow(() -> new RuntimeException("로그인 실패 - 사용자 정보 찾을 수 없음."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("비밀번호 다름.");
+            throw new RuntimeException("로그인 실패 - 사용자 정보 찾을 수 없음.");
         }
         String token = tokenProvider.createToken(String.format("%s:%s", user.getUserId(), user.getRole()));
 

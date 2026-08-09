@@ -1,6 +1,5 @@
 package kr.adapterz.springboot.service;
 
-import kr.adapterz.springboot.dto.PostListResponse;
 import kr.adapterz.springboot.dto.chat.ChatListResponse;
 import kr.adapterz.springboot.dto.chat.ChatMessageRequest;
 import kr.adapterz.springboot.dto.chat.ChatMessageResponse;

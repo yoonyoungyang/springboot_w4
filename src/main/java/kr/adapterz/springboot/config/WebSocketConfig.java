@@ -2,6 +2,7 @@ package kr.adapterz.springboot.config;
 
 import kr.adapterz.springboot.security.WebSocketAuthInterceptor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -14,6 +15,8 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final WebSocketAuthInterceptor interceptor;
+    @Value("${cors.allowed-origins}")
+    private String[] allowedOrigins;
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration){
@@ -22,7 +25,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws").setAllowedOrigins("http://127.0.0.1:5500", "http://localhost:5500", "http://localhost:5173");
+        registry.addEndpoint("/ws").setAllowedOrigins(allowedOrigins);;
     }
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
